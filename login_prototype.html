@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Login Page</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 24px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #764ba2;
+            outline: none;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5a377d;
+        }
+        .error-message {
+            color: #de3e3e;
+            font-size: 14px;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+        .success-box {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card" id="loginCard">
+        <h2>Sign In</h2>
+        <!-- Basic Mock Login Form -->
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter 'admin'" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter 'password123'" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <!-- Hidden dashboard simulation -->
+    <div class="login-card success-box" id="dashboardCard">
+        <h2>Welcome Back!</h2>
+        <p>You have successfully logged into a static GitHub Pages site.</p>
+        <button class="btn" onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const loginCard = document.getElementById('loginCard');
+        const dashboardCard = document.getElementById('dashboardCard');
+
+        loginForm.addEventListener('submit', function(event) {
+            // Prevent the page from automatically refreshing on submit
+            event.preventDefault(); 
+
+            const usernameInput = document.getElementById('username').value;
+            const passwordInput = document.getElementById('password').value;
+
+            // Learning simulation: Hardcoded validation
+            if (usernameInput === 'admin' && passwordInput === 'password123') {
+                errorMessage.innerText = "";
+                
+                // Hide login UI and show dashboard UI
+                loginCard.style.display = 'none';
+                dashboardCard.style.display = 'block';
+            } else {
+                errorMessage.innerText = "Invalid username or password!";
+            }
+        });
+
+        function logout() {
+            // Reset form fields
+            loginForm.reset();
+            // Swap views back
+            dashboardCard.style.display = 'none';
+            loginCard.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
