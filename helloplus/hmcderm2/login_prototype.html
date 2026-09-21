@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website with Google Login</title>
+    
+    <script src="https://google.com" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+            margin: 0;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        #user-profile {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h2>Welcome to My Website</h2>
+        <p>Please sign in to continue</p>
+        
+        <!-- This container holds the rendered Google button -->
+        <div id="buttonDiv"></div>
+
+        <!-- This container displays the user data after a successful login -->
+        <div id="user-profile">
+            <h3>Logged In successfully!</h3>
+            <p id="user-name"></p>
+            <p id="user-email"></p>
+        </div>
+    </div>
+
+    <script>
+        // Callback function that handles the token Google sends back after login
+        function handleCredentialResponse(response) {
+            // The response.credential contains a JWT (JSON Web Token) with user data
+            const responsePayload = decodeJwtResponse(response.credential);
+
+            console.log("User Data:", responsePayload);
+
+            // Hide the login button and show user info
+            document.getElementById("buttonDiv").style.display = "none";
+            document.getElementById("user-profile").style.display = "block";
+            
+            // Populate user info on the screen
+            document.getElementById("user-name").innerText = "Name: " + responsePayload.name;
+            document.getElementById("user-email").innerText = "Email: " + responsePayload.email;
+        }
+
+        // Helper function to decode the JWT token from Google
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            return JSON.parse(jsonPayload);
+        }
+
+        // Initialize Google Identity Services when the page loads
+        window.onload = function () {
+            google.accounts.id.initialize({
+                // REPLACE THIS CLIENT ID WITH YOUR ACTUAL GOOGLE DEVELOPER ID
+                client_id: "YOUR_GOOGLE_CLIENT_://googleusercontent.com",
+                callback: handleCredentialResponse
+            });
+            
+            // Render the official Google Sign-In button
+            google.accounts.id.renderButton(
+                document.getElementById("buttonDiv"),
+                { theme: "outline", size: "large", type: "standard" }  // Customization options
+            );
+            
+            // Optional: Displays the "One Tap" prompt in top right corner
+            google.accounts.id.prompt(); 
+        };
+    </script>
+
+</body>
+</html>
