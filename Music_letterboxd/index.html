@@ -1,0 +1,413 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Simple Login Page</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 24px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #764ba2;
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a377d;
+        }
+
+        .error-message {
+            color: #de3e3e;
+            font-size: 14px;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        .success-box {
+            display: none;
+        }
+
+        .create-account {
+            margin-top: 15px;
+        }
+
+        .create-account button {
+            background: none;
+            border: none;
+            color: #764ba2;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="login-card" id="loginCard">
+
+        <h2>Sign In</h2>
+
+        <form id="loginForm">
+
+            <div class="input-group">
+
+                <label for="username">Username</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter username"
+                    required
+                >
+
+            </div>
+
+            <div class="input-group">
+
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter password"
+                    required
+                >
+
+            </div>
+
+            <button type="submit" class="btn">Login</button>
+
+        </form>
+
+        <div class="create-account">
+
+            <button onclick="showCreateAccount()">
+                Create Account
+            </button>
+
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+    </div>
+
+
+    <div
+        class="login-card"
+        id="createAccountCard"
+        style="display: none;"
+    >
+
+        <h2>Create Account</h2>
+
+        <form id="registerForm">
+
+            <div class="input-group">
+
+                <label for="registerUsername">Username</label>
+
+                <input
+                    type="text"
+                    id="registerUsername"
+                    placeholder="Enter username"
+                    required
+                >
+
+            </div>
+
+            <div class="input-group">
+
+                <label for="registerPassword">Password</label>
+
+                <input
+                    type="password"
+                    id="registerPassword"
+                    placeholder="Enter password"
+                    required
+                >
+
+            </div>
+
+            <button type="submit" class="btn">
+                Create Account
+            </button>
+
+        </form>
+
+        <div class="create-account">
+
+            <button onclick="showLogin()">
+                Back to Login
+            </button>
+
+        </div>
+
+        <div class="error-message" id="registerError"></div>
+
+    </div>
+
+
+    <div class="login-card success-box" id="dashboardCard">
+
+        <h2>Welcome Back!</h2>
+
+        <p>You have successfully logged in.</p>
+
+        <button class="btn" onclick="logout()">Logout</button>
+
+    </div>
+
+
+    <script>
+
+        const loginForm = document.getElementById('loginForm');
+
+        const errorMessage = document.getElementById('errorMessage');
+
+        const loginCard = document.getElementById('loginCard');
+
+        const dashboardCard =
+            document.getElementById('dashboardCard');
+
+        const createAccountCard =
+            document.getElementById('createAccountCard');
+
+
+        loginForm.addEventListener('submit', async function(event) {
+
+            event.preventDefault();
+
+            const username =
+                document.getElementById('username').value;
+
+            const password =
+                document.getElementById('password').value;
+
+            try {
+
+                const response = await fetch('/login', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded'
+                    },
+
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+
+                });
+
+                if (response.ok) {
+
+                    errorMessage.innerText = '';
+
+                    loginCard.style.display = 'none';
+
+                    dashboardCard.style.display = 'block';
+
+                } else {
+
+                    errorMessage.innerText =
+                        'Invalid username or password!';
+
+                }
+
+            } catch (error) {
+
+                errorMessage.innerText =
+                    'Could not connect to server.';
+
+            }
+
+        });
+
+
+        function showCreateAccount() {
+
+            loginCard.style.display = 'none';
+
+            createAccountCard.style.display = 'block';
+
+        }
+
+
+        function showLogin() {
+
+            createAccountCard.style.display = 'none';
+
+            loginCard.style.display = 'block';
+
+        }
+
+
+        const registerForm =
+            document.getElementById('registerForm');
+
+
+        registerForm.addEventListener('submit', async function(event) {
+
+            event.preventDefault();
+
+            const username =
+                document.getElementById('registerUsername').value;
+
+            const password =
+                document.getElementById('registerPassword').value;
+
+            const registerError =
+                document.getElementById('registerError');
+
+            try {
+
+                const response = await fetch('/register', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded'
+                    },
+
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+
+                });
+
+                if (response.ok) {
+
+                    createAccountCard.style.display = 'none';
+
+                    dashboardCard.style.display = 'block';
+
+                    registerError.innerText = '';
+
+                } else if (response.status === 409) {
+
+                    registerError.innerText =
+                        'Username already exists.';
+
+                } else {
+
+                    registerError.innerText =
+                        'Could not create account.';
+
+                }
+
+            } catch (error) {
+
+                registerError.innerText =
+                    'Could not connect to server.';
+
+            }
+
+        });
+
+
+        async function logout() {
+
+            try {
+
+                await fetch('/logout', {
+
+                    method: 'POST'
+
+                });
+
+                loginForm.reset();
+
+                dashboardCard.style.display = 'none';
+
+                loginCard.style.display = 'block';
+
+            } catch (error) {
+
+                errorMessage.innerText =
+                    'Could not connect to server.';
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
+
