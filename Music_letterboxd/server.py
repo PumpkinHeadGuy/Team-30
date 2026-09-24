@@ -5,27 +5,78 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs
 from http.cookies import SimpleCookie
 
-DB = "users.db"
+DB = "server.db"
 HOST = "127.0.0.1"
 PORT = 8080
 
+class Album:
+    def __init__(self, album_id, title, artist, release_year,album_cover_url):
+      # all album info will be got from spotify api and stored in the album class
+        self.id = album_id
+        self.title = title
+        self.artist = artist
+        self.release_year = release_year
+        self.album_cover_url = album_cover_url
+        self.ratings = [] # store a list of tuples (user_id, rating, review)
+        self.avg = 0.0
+
+    def add_rating(self, user_id, rating, review):
+        self.ratings.append((user_id, rating, review))
+        self.avg = sum(r[1] for r in self.ratings) / len(self.ratings) if self.ratings else 0.0
+      
+class User:
+    def __init__(self, user_id, username, spotify_id = None):
+        self.id = user_id
+        self.username = username
+        self.spotify_id = spotify_id # if wanting to link spotify account to user
+        self.ratings = [] #store a tuples of (album classes, rating out of 5, review string) )
+        self.friends = [] # will store others user IDs
+        self.lists = [] # Store lists of ratings
+
+    def add_rating(self, album, rating, review):
+        self.ratings.append((album, rating, review))
+
+    def add_friend(self, friend_user):
+        self.friends.append(friend_user)
 # Database
 def db():
     return sqlite3.connect(DB)
 
 def setup():
     conn = db()
+    
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,
             username TEXT UNIQUE,
-            password TEXT
+            password TEXT,
+            spotify_id TEXT
+        ) 
+        """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS sessions ( 
+         token TEXT PRIMARY KEY,
+         user_id INTEGER 
+    ) 
+    """) 
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS albums (
+            id INTEGER PRIMARY KEY,
+            spotify_id TEXT UNIQUE,
+            title TEXT,
+            artist TEXT,
+            release_year INTEGER,
+            album_cover_url TEXT
         )
     """)
+
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS sessions (
-            token TEXT PRIMARY KEY,
-            user_id INTEGER
+        CREATE TABLE IF NOT EXISTS ratings (
+            user_id INTEGER,
+            album_id INTEGER,
+            rating INTEGER,
+            review TEXT,
+            UNIQUE(user_id, album_id)
         )
     """)
     conn.commit()
@@ -77,15 +128,19 @@ def get_user(token):
 
     conn = db()
 
-    user = conn.execute("""
-        SELECT users.username
+    row = conn.execute("""
+        SELECT users.id, users.username
         FROM users
         JOIN sessions ON users.id = sessions.user_id
         WHERE sessions.token = ?
     """, (token,)).fetchone()
 
     conn.close()
-    return user
+
+    if row:
+        return User(row[0], row[1])
+
+    return None
 
 # Server
 class Server(BaseHTTPRequestHandler):
@@ -100,6 +155,9 @@ class Server(BaseHTTPRequestHandler):
         return parse_qs(data)
 
     def do_GET(self):
+        token = self.cookies()
+        user = get_user(token)
+
         if self.path == "/":
             try:
                 with open("index.html", "rb") as file:
