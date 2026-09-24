@@ -1,0 +1,9 @@
+# Local secrets
+Music_letterboxd/.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local application databases
+Music_letterboxd/*.db
