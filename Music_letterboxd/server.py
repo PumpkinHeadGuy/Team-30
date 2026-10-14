@@ -1,13 +1,23 @@
 import sqlite3
 import hashlib
 import secrets
+import json
+import base64
+import os
+import requests
+from dotenv import load_dotenv
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlsplit
 from http.cookies import SimpleCookie
 
-DB = "server.db"
+BASE_DIR = Path(__file__).resolve().parent
+DB = BASE_DIR / "server.db"
 HOST = "127.0.0.1"
 PORT = 8080
+
+load_dotenv(BASE_DIR / ".env")
+
 
 class Album:
     def __init__(self, album_id, title, artist, release_year,album_cover_url):
@@ -142,6 +152,54 @@ def get_user(token):
 
     return None
 
+def spotify_access_token():
+    client_id = os.environ.get("SPOTIFY_CLIENT_ID")
+    client_secret = os.environ.get("SPOTIFY_CLIENT_SECRET")
+
+    if not client_id or not client_secret:
+        raise RuntimeError(
+            "Spotify credentials are not configured. "
+            "Create Music_letterboxd/.env with SPOTIFY_CLIENT_ID and "
+            "SPOTIFY_CLIENT_SECRET."
+        )
+
+    credentials = base64.b64encode(
+        f"{client_id}:{client_secret}".encode()
+    ).decode()
+
+    response = requests.post(
+        "https://accounts.spotify.com/api/token",
+        headers={"Authorization": f"Basic {credentials}"},
+        data={"grant_type": "client_credentials"},
+        timeout=10
+    )
+    response.raise_for_status()
+    return response.json()["access_token"]
+
+def search_spotify_albums(query):
+    token = spotify_access_token()
+    response = requests.get(
+        "https://api.spotify.com/v1/search",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"q": query, "type": "album", "limit": 9},
+        timeout=10
+    )
+    response.raise_for_status()
+
+    albums = []
+    for album in response.json().get("albums", {}).get("items", []):
+        artists = album.get("artists", [])
+        images = album.get("images", [])
+        albums.append({
+            "id": album.get("id"),
+            "title": album.get("name"),
+            "artist": artists[0].get("name") if artists else "Unknown artist",
+            "release_year": album.get("release_date", "")[:4],
+            "album_cover_url": images[0].get("url") if images else None,
+            "spotify_url": album.get("external_urls", {}).get("spotify")
+        })
+    return albums
+
 # Server
 class Server(BaseHTTPRequestHandler):
 
@@ -158,9 +216,51 @@ class Server(BaseHTTPRequestHandler):
         token = self.cookies()
         user = get_user(token)
 
-        if self.path == "/":
+        path = urlsplit(self.path)
+
+        if path.path == "/api/session":
+            response = {
+                "authenticated": user is not None,
+                "username": user.username if user else None
+            }
+            body = json.dumps(response).encode()
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        elif path.path == "/api/albums":
+            if not user:
+                self.send_response(401)
+                self.end_headers()
+                return
+
+            query = parse_qs(path.query).get("q", [""])[0].strip()
+            if not query:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"error":"Search query is required"}')
+                return
+
             try:
-                with open("index.html", "rb") as file:
+                response = {"albums": search_spotify_albums(query)}
+                body = json.dumps(response).encode()
+                self.send_response(200)
+            except (requests.RequestException, RuntimeError, KeyError, ValueError):
+                body = b'{"error":"Spotify search is unavailable"}'
+                self.send_response(502)
+
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        elif path.path == "/":
+            try:
+                with open(BASE_DIR / "index.html", "rb") as file:
                     html = file.read()
 
                 self.send_response(200)
