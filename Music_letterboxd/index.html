@@ -341,6 +341,16 @@
             gap: 2px;
         }
 
+        .rating-control {
+            position: relative;
+        }
+
+        .clear-rating {
+            position: absolute;
+            left: -28px;
+            top: 40px;
+        }
+
         .star-rating button,
         #reviewHeart {
             border: 0;
@@ -349,6 +359,10 @@
             font-size: 38px;
             line-height: 1;
             cursor: pointer;
+        }
+        
+        .star-rating button.clear-rating {
+            font-size: 25px;
         }
 
         /* Review popup: footer and selected controls */
@@ -379,7 +393,7 @@
         .star-rating button[aria-pressed="true"] {
             color: #764ba2;
         }
-        .star-rating button {
+        .star-rating button:not(.clear-rating) {
             background-image: linear-gradient(
                 90deg,
                 #764ba2 var(--star-fill, 0%),
@@ -604,6 +618,7 @@
                                     <span>Rating</span>
 
                                     <div class="star-rating">
+                                        <button type="button" class="clear-rating" data-star="0" aria-label="0 star" hidden>✖</button>
                                         <button type="button" data-star="1" aria-label="1 star">★</button>
                                         <button type="button" data-star="2" aria-label="2 star">★</button>
                                         <button type="button" data-star="3" aria-label="3 star">★</button>
@@ -652,7 +667,7 @@
         const createAccountCard =
             document.getElementById('createAccountCard');
 
-        let selectedRating = null;
+        let selectedRating = 0;
 
         loginForm.addEventListener('submit', async function(event) {
 
@@ -841,7 +856,8 @@
 
             const cover = document.getElementById('reviewAlbumCover');
             const placeholder = document.getElementById('reviewCoverPlaceholder');
-
+            
+            // set cover to the album cover or a placeholder
             if (album.album_cover_url) {
                 cover.src = album.album_cover_url;
                 cover.alt = album.title + ' album cover';
@@ -854,27 +870,45 @@
                 placeholder.hidden = false;
             }
 
+            // get todays date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+
+            // format it to use it as the max for listenedAt date input
+            const formattedToday = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('listenedAt').max = formattedToday;
+
+            // reset review popup elements
             document.getElementById('listenedAt').value = '';
             document.getElementById('reviewText').value = '';
             document.getElementById('reviewHeart').setAttribute('aria-pressed', 'false');
-            updateStars(null);
+            updateStars(0);
 
+            // gray out the background and focus the keyboard to the close button
             document.getElementById('reviewBackdrop').hidden = false;
             document.getElementById('closeReviewButton').focus();
         }
 
         // Update each star's fill and remember the selected rating.
         function updateStars(rating) {
+            const clearButton = document.querySelector('.clear-rating');
+            clearButton.hidden = rating === 0;
+
+
             selectedRating = rating;
 
             document.querySelectorAll('.star-rating button').forEach(function(starButton) {
                 const starNumber = Number(starButton.dataset.star);
 
                 let fill = 0;
-                if (rating >= starNumber) {
-                    fill = 100;
-                } else if (rating >= starNumber - 0.5) {
-                    fill = 50;
+                if (starNumber != 0) {
+                    if (rating >= starNumber) {
+                        fill = 100;
+                    } else if (rating >= starNumber - 0.5) {
+                        fill = 50;
+                    }
                 }
 
                 starButton.style.setProperty('--star-fill', fill + '%');
@@ -892,7 +926,7 @@
             starButton.addEventListener('click', function() {
                 const starNumber = Number(starButton.dataset.star);
 
-                if (selectedRating === starNumber) {
+                if (selectedRating === starNumber && starNumber != 0) {
                     updateStars(starNumber - 0.5);
                 } else {
                     updateStars(starNumber);
@@ -905,6 +939,7 @@
         });
 
         document.getElementById('saveReviewButton').addEventListener('click', function() {
+            // need to implement the save the review data functionality
             closeReviewMenu();
         });
 
