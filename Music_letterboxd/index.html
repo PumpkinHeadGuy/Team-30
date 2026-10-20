@@ -218,6 +218,210 @@
             .album-search .btn { width: 100%; }
         }
 
+        /* Review popup: backdrop and dialog */
+        #reviewBackdrop[hidden] {
+            display: none;
+        }
+
+        .review-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .55);
+        }
+
+        .review-modal {
+            width: min(900px, 100%);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            border-radius: 8px;
+            color: #333;
+            background: #ffffff;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .review-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        /* Review popup: album details and form controls */
+        .review-content {
+            display: grid;
+            grid-template-columns: 180px minmax(0, 1fr);
+            gap: 32px;
+            padding: 32px;
+        }
+
+        .review-cover {
+            width: 180px;
+            height: 180px;
+            background: #ddd;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        }
+
+        .review-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .review-cover span {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            color: #666;
+            font-size: 56px;
+        }
+        #reviewCoverPlaceholder[hidden] {
+            display: none;
+        }
+
+        .review-details {
+            min-width: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .review-details h3 {
+            margin: 0px;
+            color: #333;
+            font-size: 26px;
+        }
+
+        .review-details p {
+            margin: 0px;
+            color: #666;
+        }
+
+        .review-details input,
+        .review-details textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        .review-details textarea {
+            min-height: 140px;
+            color: #333;
+            background: #fff;
+            resize: vertical;
+        }
+
+        .review-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+        }
+
+        .rating-control span,
+        .like-control span {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 2px;
+        }
+
+        .rating-control {
+            position: relative;
+        }
+
+        .clear-rating {
+            position: absolute;
+            left: -28px;
+            top: 40px;
+        }
+
+        .star-rating button,
+        #reviewHeart {
+            border: 0;
+            background: none;
+            color: #ccc;
+            font-size: 38px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        
+        .star-rating button.clear-rating {
+            font-size: 25px;
+        }
+
+        /* Review popup: footer and selected controls */
+        .review-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 16px 32px;
+            border-top: 1px solid #eee;
+            background: #f4f4f4;
+        }
+
+        #saveReviewButton {
+            padding: 10px 24px;
+            border: 0;
+            border-radius: 24px;
+            color: white;
+            background: #764ba2;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #saveReviewButton:hover {
+            background: #5a377d;
+        }
+
+        #reviewHeart[aria-pressed="true"],
+        .star-rating button[aria-pressed="true"] {
+            color: #764ba2;
+        }
+        .star-rating button:not(.clear-rating) {
+            background-image: linear-gradient(
+                90deg,
+                #764ba2 var(--star-fill, 0%),
+                #ccc var(--star-fill, 0%)
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 600px) {
+            .review-content {
+                grid-template-columns: 80px minmax(0, 1fr);
+                gap: 16px;
+                padding: 20px 16px;
+            }
+
+            .review-cover {
+                width: 80px;
+                height: 80px;
+            }
+
+            .star-rating button,
+            #reviewHeart {
+                font-size: 30px;
+            }
+        }
+
     </style>
 
 </head>
@@ -364,6 +568,83 @@
             </div>
 
             <div id="albumResults"></div>
+
+            <div class="review-backdrop" id="reviewBackdrop" hidden>
+
+                <section class="review-modal" role="dialog" aria-modal="true"
+                    aria-labelledby="reviewModalTitle">
+
+                    <header class="review-header">
+
+                        <h2 id="reviewModalTitle">I listened to...</h2>
+
+                        <button
+                            type="button"
+                            id="closeReviewButton"
+                            aria-label="Close review"
+                        >
+                            &times;
+                        </button>
+
+                    </header>
+
+                    <div class="review-content">
+
+                        <div class="review-cover">
+                            <img id="reviewAlbumCover" alt="" hidden>
+                            <span id="reviewCoverPlaceholder" aria-hidden="true">♪</span>
+                        </div>
+
+                        <div class="review-details">
+
+                            <h3 id="reviewAlbumTitle">Album title</h3>
+                            <p id="reviewAlbumArtist">Artist name</p>
+                            <p id="reviewAlbumYear">Release year</p>
+
+                            <label for="listenedAt">Listened on</label>
+                            <input type="date" id="listenedAt">
+
+                            <label for="reviewText">Review (optional)</label>
+
+                            <textarea
+                                id="reviewText"
+                                maxlength="5000"
+                                placeholder="Add a review"
+                            ></textarea>
+
+                            <div class="review-options">
+
+                                <div class="rating-control">
+                                    <span>Rating</span>
+
+                                    <div class="star-rating">
+                                        <button type="button" class="clear-rating" data-star="0" aria-label="0 star" hidden>✖</button>
+                                        <button type="button" data-star="1" aria-label="1 star">★</button>
+                                        <button type="button" data-star="2" aria-label="2 star">★</button>
+                                        <button type="button" data-star="3" aria-label="3 star">★</button>
+                                        <button type="button" data-star="4" aria-label="4 star">★</button>
+                                        <button type="button" data-star="5" aria-label="5 star">★</button>
+                                    </div>
+                                </div>
+
+                                <div class="like-control">
+                                    <span>Like</span>
+                                    <button type="button" id="reviewHeart" aria-pressed="false">♥</button>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <footer class="review-footer">
+                        <button type="button" id="saveReviewButton">Save</button>
+                    </footer>
+
+                </section>
+
+            </div>
         </div>
 
     </div>
@@ -386,6 +667,7 @@
         const createAccountCard =
             document.getElementById('createAccountCard');
 
+        let selectedRating = 0;
 
         loginForm.addEventListener('submit', async function(event) {
 
@@ -566,6 +848,122 @@
             albumPage.scrollTop = 0;
         }
 
+        // Fill the popup with the selected album and reset its form controls.
+        function openReviewMenu(album) {
+            document.getElementById('reviewAlbumTitle').innerText = album.title;
+            document.getElementById('reviewAlbumArtist').innerText = album.artist;
+            document.getElementById('reviewAlbumYear').innerText = album.release_year;
+
+            const cover = document.getElementById('reviewAlbumCover');
+            const placeholder = document.getElementById('reviewCoverPlaceholder');
+            
+            // set cover to the album cover or a placeholder
+            if (album.album_cover_url) {
+                cover.src = album.album_cover_url;
+                cover.alt = album.title + ' album cover';
+                cover.hidden = false;
+                placeholder.hidden = true;
+            } else {
+                cover.removeAttribute('src');
+                cover.alt = '';
+                cover.hidden = true;
+                placeholder.hidden = false;
+            }
+
+            // get todays date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+
+            // format it to use it as the max for listenedAt date input
+            const formattedToday = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('listenedAt').max = formattedToday;
+
+            // reset review popup elements
+            document.getElementById('listenedAt').value = '';
+            document.getElementById('reviewText').value = '';
+            document.getElementById('reviewHeart').setAttribute('aria-pressed', 'false');
+            updateStars(0);
+
+            // gray out the background and focus the keyboard to the close button
+            document.getElementById('reviewBackdrop').hidden = false;
+            document.getElementById('closeReviewButton').focus();
+        }
+
+        // Update each star's fill and remember the selected rating.
+        function updateStars(rating) {
+            const clearButton = document.querySelector('.clear-rating');
+            clearButton.hidden = rating === 0;
+
+
+            selectedRating = rating;
+
+            document.querySelectorAll('.star-rating button').forEach(function(starButton) {
+                const starNumber = Number(starButton.dataset.star);
+
+                let fill = 0;
+                if (starNumber != 0) {
+                    if (rating >= starNumber) {
+                        fill = 100;
+                    } else if (rating >= starNumber - 0.5) {
+                        fill = 50;
+                    }
+                }
+
+                starButton.style.setProperty('--star-fill', fill + '%');
+                starButton.setAttribute('aria-pressed', fill > 0);
+            });
+        }
+
+        function closeReviewMenu() {
+            document.getElementById('reviewBackdrop').hidden = true;
+        }
+
+        // Register popup interactions after its helper functions are defined.
+        // Clicking a selected whole star again changes it to a half star.
+        document.querySelectorAll('.star-rating button').forEach(function(starButton) {
+            starButton.addEventListener('click', function() {
+                const starNumber = Number(starButton.dataset.star);
+
+                if (selectedRating === starNumber && starNumber != 0) {
+                    updateStars(starNumber - 0.5);
+                } else {
+                    updateStars(starNumber);
+                }
+            });
+        });
+
+        document.getElementById('closeReviewButton').addEventListener('click', function() {
+            closeReviewMenu();
+        });
+
+        document.getElementById('saveReviewButton').addEventListener('click', function() {
+            // need to implement the save the review data functionality
+            closeReviewMenu();
+        });
+
+        document.getElementById('reviewBackdrop').addEventListener('click', function(event) {
+            if (event.target === document.getElementById('reviewBackdrop')) {
+                closeReviewMenu();
+            }
+        });
+
+        document.getElementById('reviewHeart').addEventListener('click', function() {
+            const heart = document.getElementById('reviewHeart');
+            const isPressed = heart.getAttribute('aria-pressed') === 'true';
+
+            heart.setAttribute('aria-pressed', !isPressed);
+        });
+
+        document.addEventListener('keydown', function(event) {
+            const backdrop = document.getElementById('reviewBackdrop');
+
+            if (event.key === 'Escape' && !backdrop.hidden) {
+                closeReviewMenu();
+            }
+        });
+
         document.getElementById('albumSearchForm').addEventListener('submit', async function(event) {
             event.preventDefault();
 
@@ -618,6 +1016,18 @@
                         link.innerText = 'Open in Spotify';
                         details.appendChild(link);
                     }
+
+                    const reviewButton = document.createElement('button');
+
+                    reviewButton.innerText = 'Write a review';
+
+                    reviewButton.type = 'button';
+
+                    reviewButton.addEventListener('click', function() {
+                        openReviewMenu(album);
+                    });
+
+                    details.appendChild(reviewButton);
 
                     result.append(cover, details);
                     albumResults.appendChild(result);
