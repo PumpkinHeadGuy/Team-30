@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Album Reviews</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .album {
+            background-color: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        #reviewResult {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🎵 Album Reviews</h1>
+
+    <div class="album">
+
+        <h2>Review an Album</h2>
+
+        <label for="album">Choose an album:</label>
+
+        <select id="album">
+            <option value="The Dark Side of the Moon">
+                The Dark Side of the Moon - Pink Floyd
+            </option>
+
+            <option value="Abbey Road">
+                Abbey Road - The Beatles
+            </option>
+
+            <option value="Thriller">
+                Thriller - Michael Jackson
+            </option>
+        </select>
+
+        <label for="rating">Rating:</label>
+
+        <select id="rating">
+            <option value="5">⭐⭐⭐⭐⭐</option>
+            <option value="4">⭐⭐⭐⭐</option>
+            <option value="3">⭐⭐⭐</option>
+            <option value="2">⭐⭐</option>
+            <option value="1">⭐</option>
+        </select>
+
+        <label for="review">Your Review:</label>
+
+        <textarea
+            id="review"
+            rows="5"
+            placeholder="Write your review here..."
+        ></textarea>
+
+        <button onclick="submitReview()">Submit Review</button>
+
+        <div id="reviewResult"></div>
+
+    </div>
+
+    <script>
+        function submitReview() {
+
+            const album = document.getElementById("album").value;
+            const rating = document.getElementById("rating").value;
+            const review = document.getElementById("review").value;
+
+            if (review.trim() === "") {
+                alert("Please write a review first!");
+                return;
+            }
+
+            document.getElementById("reviewResult").innerHTML =
+                "<strong>Your Review</strong><br><br>" +
+                "Album: " + album + "<br>" +
+                "Rating: " + "⭐".repeat(rating) + "<br>" +
+                "Review: " + review;
+
+            document.getElementById("reviewResult").style.display = "block";
+        }
+    </script>
+
+</body>
+</html>
