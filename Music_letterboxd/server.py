@@ -1,3 +1,4 @@
+from os import path
 import sqlite3
 import hashlib
 import secrets
@@ -290,13 +291,15 @@ class Server(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
 
-        elif path.path in ("/", "/Album_page.html", "/Settings_page.html"):
+        elif path.path in ("/", "/index.html", "/Search_page.html", "/Album_page.html", "/Settings_page.html"):
             filename = {
                 "/": "index.html",
+                "/index.html": "index.html",
+                "/Search_page.html": "Search_page.html",
                 "/Album_page.html": "Album_page.html",
                 "/Settings_page.html": "Settings_page.html"
             }[path.path]
-
+        
             try:
                 with open(BASE_DIR / filename, "rb") as file:
                     html = file.read()
@@ -312,6 +315,7 @@ class Server(BaseHTTPRequestHandler):
 
         elif path.path.startswith("/Images/"):
             self.serve_static_file(path.path)
+
         else:
             self.send_error(404, "Page not found")
 

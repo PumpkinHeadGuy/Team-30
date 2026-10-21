@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBD - Search</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        /* Navigation */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 20px;
+            background: #764ba2;
+            color: white;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        .home-button {
+            padding: 10px 15px;
+            background: #444;
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .home-button:hover {
+            background: #333;
+        }
+
+        .website-title {
+            margin: 0;
+            font-size: 22px;
+            white-space: nowrap;
+        }
+
+        /* Search bar */
+        .top-search {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+            max-width: 500px;
+            margin-left: auto;
+        }
+
+        .top-search input {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-width: 0;
+            padding: 11px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        .top-search button,
+        .write-review-button,
+        .submit-review-button {
+            padding: 11px 15px;
+            border: 0;
+            border-radius: 6px;
+            background: #444;
+            color: white;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .top-search button:hover {
+            background: #333;
+        }
+
+        .profile-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border: 2px solid white;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .profile-icon {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Search results */
+        .search-results-section {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        #searchStatus {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0;
+            color: #666;
+        }
+
+        #albumResults {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .album-result {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px #00000012;
+            overflow-wrap: anywhere;
+        }
+
+        .album-result img,
+        .album-cover-placeholder {
+            width: 90px;
+            height: 90px;
+            flex: 0 0 90px;
+            object-fit: cover;
+            background: #eee;
+            border-radius: 4px;
+        }
+
+        .album-result h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .album-result p {
+            margin: 4px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .album-result a {
+            display: inline-block;
+            margin-top: 8px;
+            color: #764ba2;
+        }
+
+        .album-result button {
+            margin-top: 8px;
+            padding: 7px 10px;
+            border: 0;
+            border-radius: 5px;
+            background: #764ba2;
+            color: white;
+            cursor: pointer;
+        }
+
+        .album-result button:hover {
+            background: #5a377d;
+        }
+
+        /* Popup lives in the same document as the results grid */
+        /* Review popup: backdrop and dialog */
+        #reviewBackdrop[hidden] {
+            display: none;
+        }
+
+        .review-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .55);
+        }
+
+        .review-modal {
+            width: min(900px, 100%);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            border-radius: 8px;
+            color: #333;
+            background: #ffffff;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .review-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        /* Review popup: album details and form controls */
+        .review-content {
+            display: grid;
+            grid-template-columns: 180px minmax(0, 1fr);
+            gap: 32px;
+            padding: 32px;
+        }
+
+        .review-cover {
+            width: 180px;
+            height: 180px;
+            background: #ddd;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        }
+
+        .review-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .review-cover span {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            color: #666;
+            font-size: 56px;
+        }
+        #reviewCoverPlaceholder[hidden] {
+            display: none;
+        }
+
+        .review-details {
+            min-width: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .review-details h3 {
+            margin: 0px;
+            color: #333;
+            font-size: 26px;
+        }
+
+        .review-details p {
+            margin: 0px;
+            color: #666;
+        }
+
+        .review-details input,
+        .review-details textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        .review-details textarea {
+            min-height: 140px;
+            color: #333;
+            background: #fff;
+            resize: vertical;
+        }
+
+        .review-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+        }
+
+        .rating-control span,
+        .like-control span {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 2px;
+        }
+
+        .rating-control {
+            position: relative;
+        }
+
+        .clear-rating {
+            position: absolute;
+            left: -28px;
+            top: 40px;
+        }
+
+        .star-rating button,
+        #reviewHeart {
+            border: 0;
+            background: none;
+            color: #ccc;
+            font-size: 38px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        
+        .star-rating button.clear-rating {
+            font-size: 25px;
+        }
+
+        /* Review popup: footer and selected controls */
+        .review-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 16px 32px;
+            border-top: 1px solid #eee;
+            background: #f4f4f4;
+        }
+
+        #saveReviewButton {
+            padding: 10px 24px;
+            border: 0;
+            border-radius: 24px;
+            color: white;
+            background: #764ba2;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #saveReviewButton:hover {
+            background: #5a377d;
+        }
+
+        #reviewHeart[aria-pressed="true"],
+        .star-rating button[aria-pressed="true"] {
+            color: #764ba2;
+        }
+        .star-rating button:not(.clear-rating) {
+            background-image: linear-gradient(
+                90deg,
+                #764ba2 var(--star-fill, 0%),
+                #ccc var(--star-fill, 0%)
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 600px) {
+            .review-content {
+                grid-template-columns: 80px minmax(0, 1fr);
+                gap: 16px;
+                padding: 20px 16px;
+            }
+
+            .review-cover {
+                width: 80px;
+                height: 80px;
+            }
+
+            .star-rating button,
+            #reviewHeart {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation bar -->
+    <header class="top-bar">
+        <div class="nav-left">
+            <h1 class="website-title">TBD</h1>
+        </div>
+
+        <form class="top-search" id="topSearchForm">
+            <input
+                type="search"
+                id="topSearchInput"
+                placeholder="Search albums or artists..."
+                aria-label="Search albums or artists"
+                required
+            >
+            <button type="submit">Search</button>
+        </form>
+
+        <a href="/Settings_page.html" class="profile-link" aria-label="Open settings">
+            <img src="Images/default-icon.png" alt="Profile" class="profile-icon">
+        </a>
+    </header>
+
+    <!-- Search results appear here -->
+    <section class="search-results-section" aria-label="Album search results">
+        <div id="searchStatus">Search for an album or artist to get started.</div>
+        <div id="albumResults"></div>
+    </section>
+
+    <!-- Review popup -->
+            <div class="review-backdrop" id="reviewBackdrop" hidden>
+
+                <section class="review-modal" role="dialog" aria-modal="true"
+                    aria-labelledby="reviewModalTitle">
+
+                    <header class="review-header">
+
+                        <h2 id="reviewModalTitle">I listened to...</h2>
+
+                        <button
+                            type="button"
+                            id="closeReviewButton"
+                            aria-label="Close review"
+                        >
+                            &times;
+                        </button>
+
+                    </header>
+
+                    <div class="review-content">
+
+                        <div class="review-cover">
+                            <img id="reviewAlbumCover" alt="" hidden>
+                            <span id="reviewCoverPlaceholder" aria-hidden="true">♪</span>
+                        </div>
+
+                        <div class="review-details">
+
+                            <h3 id="reviewAlbumTitle">Album title</h3>
+                            <p id="reviewAlbumArtist">Artist name</p>
+                            <p id="reviewAlbumYear">Release year</p>
+
+                            <label for="listenedAt">Listened on</label>
+                            <input type="date" id="listenedAt">
+
+                            <label for="reviewText">Review (optional)</label>
+
+                            <textarea
+                                id="reviewText"
+                                maxlength="5000"
+                                placeholder="Add a review"
+                            ></textarea>
+
+                            <div class="review-options">
+
+                                <div class="rating-control">
+                                    <span>Rating</span>
+
+                                    <div class="star-rating">
+                                        <button type="button" class="clear-rating" data-star="0" aria-label="0 star" hidden>✖</button>
+                                        <button type="button" data-star="1" aria-label="1 star">★</button>
+                                        <button type="button" data-star="2" aria-label="2 star">★</button>
+                                        <button type="button" data-star="3" aria-label="3 star">★</button>
+                                        <button type="button" data-star="4" aria-label="4 star">★</button>
+                                        <button type="button" data-star="5" aria-label="5 star">★</button>
+                                    </div>
+                                </div>
+
+                                <div class="like-control">
+                                    <span>Like</span>
+                                    <button type="button" id="reviewHeart" aria-pressed="false">♥</button>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <footer class="review-footer">
+                        <button type="button" id="saveReviewButton">Save</button>
+                    </footer>
+
+                </section>
+
+            </div>
+
+    <script>
+        const searchForm = document.getElementById('topSearchForm');
+        const searchInput = document.getElementById('topSearchInput');
+        const searchStatus = document.getElementById('searchStatus');
+        const albumResults = document.getElementById('albumResults');
+
+        let searchController = null;
+        let selectedRating = 0;
+        let reviewAlbum = null;
+
+        // Signed-out visitors go back to the login screen.
+        // (Supabase version: check sb.auth.getSession() instead.)
+        (async function () {
+            try {
+                const s = await (await fetch('/api/session')).json();
+                if (!s.authenticated) {
+                    window.location.replace('/');
+                }
+            } catch (error) {
+                // Server unreachable: leave the page as is.
+            }
+        })();
+
+        function createAlbumCard(album) {
+            const card = document.createElement('article');
+            card.className = 'album-result';
+            card.style.cursor = 'pointer';
+
+            let cover;
+            if (album.album_cover_url) {
+                cover = document.createElement('img');
+                cover.src = album.album_cover_url;
+                cover.alt = (album.title || 'Album') + ' album cover';
+            } else {
+                cover = document.createElement('div');
+                cover.className = 'album-cover-placeholder';
+            }
+
+            const details = document.createElement('div');
+
+            const title = document.createElement('h3');
+            title.textContent = album.title || 'Unknown album';
+
+            const artist = document.createElement('p');
+            artist.textContent = album.artist || 'Unknown artist';
+
+            const year = document.createElement('p');
+            year.textContent = album.release_year || 'Unknown year';
+
+            details.append(title, artist, year);
+
+            if (album.spotify_url) {
+                const link = document.createElement('a');
+                link.href = album.spotify_url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = 'Open in Spotify';
+                details.append(link, document.createElement('br'));
+            }
+
+            const reviewButton = document.createElement('button');
+            reviewButton.type = 'button';
+            reviewButton.textContent = 'Write a review';
+            reviewButton.addEventListener('click', function (event) {
+                event.stopPropagation();
+                openReviewMenu(album);
+            });
+            details.appendChild(reviewButton);
+
+            // Clicking the card opens the album's own page.
+            card.addEventListener('click', function (event) {
+                if (event.target.closest('a, button')) {
+                    return;
+                }
+                sessionStorage.setItem('selectedAlbum', JSON.stringify(album));
+                window.location.href = '/Album_page.html';
+            });
+
+            card.append(cover, details);
+            return card;
+        }
+
+        async function searchAlbums(query) {
+            query = query.trim();
+            if (!query) {
+                return;
+            }
+
+            // Cancel an older search if the user starts another.
+            if (searchController) {
+                searchController.abort();
+            }
+            searchController = new AbortController();
+
+            searchStatus.textContent = 'Searching...';
+            albumResults.replaceChildren();
+
+            // Keep the search in the URL so it can be shared or reloaded.
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', query);
+            history.replaceState({}, '', url);
+
+            try {
+                // (Supabase version: add headers: { Authorization: 'Bearer ' + session.access_token })
+                const response = await fetch('/api/albums?q=' + encodeURIComponent(query), {
+                    signal: searchController.signal,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.replace('/');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Album search failed.');
+                }
+
+                if (!Array.isArray(data.albums) || data.albums.length === 0) {
+                    searchStatus.textContent = 'No albums found. Try another album or artist.';
+                    return;
+                }
+
+                searchStatus.textContent = 'Found ' + data.albums.length + ' album(s).';
+                data.albums.forEach(function (album) {
+                    albumResults.appendChild(createAlbumCard(album));
+                });
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                searchStatus.textContent = error.message === 'Spotify search is unavailable'
+                    ? 'Spotify search is unavailable. Check the server credentials.'
+                    : (error.message || 'Could not search for albums.');
+            }
+        }
+
+        searchForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            searchAlbums(searchInput.value);
+        });
+
+        // ---- Review popup ----
+        // Fill the popup with the selected album and reset its form controls.
+        function openReviewMenu(album) {
+            reviewAlbum = album;
+            document.getElementById('reviewAlbumTitle').innerText = album.title;
+            document.getElementById('reviewAlbumArtist').innerText = album.artist;
+            document.getElementById('reviewAlbumYear').innerText = album.release_year;
+
+            const cover = document.getElementById('reviewAlbumCover');
+            const placeholder = document.getElementById('reviewCoverPlaceholder');
+            
+            // set cover to the album cover or a placeholder
+            if (album.album_cover_url) {
+                cover.src = album.album_cover_url;
+                cover.alt = album.title + ' album cover';
+                cover.hidden = false;
+                placeholder.hidden = true;
+            } else {
+                cover.removeAttribute('src');
+                cover.alt = '';
+                cover.hidden = true;
+                placeholder.hidden = false;
+            }
+
+            // get todays date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+
+            // format it to use it as the max for listenedAt date input
+            const formattedToday = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('listenedAt').max = formattedToday;
+
+            // reset review popup elements
+            document.getElementById('listenedAt').value = '';
+            document.getElementById('reviewText').value = '';
+            document.getElementById('reviewHeart').setAttribute('aria-pressed', 'false');
+            updateStars(0);
+
+            // gray out the background and focus the keyboard to the close button
+            document.getElementById('reviewBackdrop').hidden = false;
+            document.getElementById('closeReviewButton').focus();
+        }
+
+        // Update each star's fill and remember the selected rating.
+        function updateStars(rating) {
+            const clearButton = document.querySelector('.clear-rating');
+            clearButton.hidden = rating === 0;
+
+
+            selectedRating = rating;
+
+            document.querySelectorAll('.star-rating button').forEach(function(starButton) {
+                const starNumber = Number(starButton.dataset.star);
+
+                let fill = 0;
+                if (starNumber != 0) {
+                    if (rating >= starNumber) {
+                        fill = 100;
+                    } else if (rating >= starNumber - 0.5) {
+                        fill = 50;
+                    }
+                }
+
+                starButton.style.setProperty('--star-fill', fill + '%');
+                starButton.setAttribute('aria-pressed', fill > 0);
+            });
+        }
+
+        function closeReviewMenu() {
+            document.getElementById('reviewBackdrop').hidden = true;
+        }
+
+        // Register popup interactions after its helper functions are defined.
+        // Clicking a selected whole star again changes it to a half star.
+        document.querySelectorAll('.star-rating button').forEach(function(starButton) {
+            starButton.addEventListener('click', function() {
+                const starNumber = Number(starButton.dataset.star);
+
+                if (selectedRating === starNumber && starNumber != 0) {
+                    updateStars(starNumber - 0.5);
+                } else {
+                    updateStars(starNumber);
+                }
+            });
+        });
+
+        document.getElementById('closeReviewButton').addEventListener('click', function() {
+            closeReviewMenu();
+        });
+
+        document.getElementById('saveReviewButton').addEventListener('click', function() {
+            // TODO: save to Supabase (reviews upsert) using reviewAlbum, selectedRating,
+            // #reviewText, #reviewHeart (aria-pressed) and #listenedAt
+            closeReviewMenu();
+        });
+
+        document.getElementById('reviewBackdrop').addEventListener('click', function(event) {
+            if (event.target === document.getElementById('reviewBackdrop')) {
+                closeReviewMenu();
+            }
+        });
+
+        document.getElementById('reviewHeart').addEventListener('click', function() {
+            const heart = document.getElementById('reviewHeart');
+            const isPressed = heart.getAttribute('aria-pressed') === 'true';
+
+            heart.setAttribute('aria-pressed', !isPressed);
+        });
+
+        document.addEventListener('keydown', function(event) {
+            const backdrop = document.getElementById('reviewBackdrop');
+
+            if (event.key === 'Escape' && !backdrop.hidden) {
+                closeReviewMenu();
+            }
+        });
+
+        // Search automatically if the page URL contains ?q=...
+        const initialQuery = new URLSearchParams(window.location.search).get('q');
+        if (initialQuery) {
+            searchInput.value = initialQuery;
+            searchAlbums(initialQuery);
+        }
+    </script>
+
+</body>
+</html>
