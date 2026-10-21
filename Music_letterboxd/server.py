@@ -305,7 +305,7 @@ class Server(BaseHTTPRequestHandler):
 
         # Login and registration pages must be available when signed out.
         if request_path.path in ("/login-page", "/login.html"):
-            filename = "login.html"
+            filename = "index.html"
             try:
                 with open(BASE_DIR / filename, "rb") as file:
                     body = file.read()
@@ -320,9 +320,9 @@ class Server(BaseHTTPRequestHandler):
 
         # Main website pages require a valid session.
         page_routes = {
-            "/": "index.html",
-            "/home": "index.html",
-            "/index.html": "index.html",
+            "/": "home.html",
+            "/home": "home.html",
+            "/index.html": "home.html",
             "/Search_page.html": "Search_page.html",
             "/Album_page.html": "Album_page.html",
             "/Settings_page.html": "Settings_page.html"
@@ -342,7 +342,7 @@ class Server(BaseHTTPRequestHandler):
                     body = file.read()
 
                 # Fill in the signed-in user's name on the home page.
-                if filename == "index.html":
+                if filename == "home.html":
                     username = html_module.escape(user.username).encode("utf-8")
                     body = body.replace(b"{{username}}", username)
 
