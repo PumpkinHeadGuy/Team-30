@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlsplit
 from http.cookies import SimpleCookie
 import mimetypes
+import html as html_module
 
 BASE_DIR = Path(__file__).resolve().parent
 DB = BASE_DIR / "server.db"
@@ -248,76 +249,117 @@ class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         token = self.cookies()
         user = get_user(token)
+        request_path = urlsplit(self.path)
 
-        path = urlsplit(self.path)
-
-        if path.path == "/api/session":
+        # Return login status for pages that need to check the current session.
+        if request_path.path == "/api/session":
             response = {
                 "authenticated": user is not None,
                 "username": user.username if user else None
             }
-            body = json.dumps(response).encode()
+            body = json.dumps(response).encode("utf-8")
 
             self.send_response(200)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+            return
 
-        elif path.path == "/api/albums":
+        # Album search is only available to signed-in users.
+        if request_path.path == "/api/albums":
             if not user:
+                body = b'{"error":"Authentication required"}'
                 self.send_response(401)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
+                self.wfile.write(body)
                 return
 
-            query = parse_qs(path.query).get("q", [""])[0].strip()
+            query = parse_qs(request_path.query).get("q", [""])[0].strip()
             if not query:
+                body = b'{"error":"Search query is required"}'
                 self.send_response(400)
-                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
-                self.wfile.write(b'{"error":"Search query is required"}')
+                self.wfile.write(body)
                 return
 
             try:
-                response = {"albums": search_spotify_albums(query)}
-                body = json.dumps(response).encode()
-                self.send_response(200)
+                body = json.dumps(
+                    {"albums": search_spotify_albums(query)}
+                ).encode("utf-8")
+                status = 200
             except (requests.RequestException, RuntimeError, KeyError, ValueError):
                 body = b'{"error":"Spotify search is unavailable"}'
-                self.send_response(502)
+                status = 502
 
-            self.send_header("Content-Type", "application/json")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+            return
 
-        elif path.path in ("/", "/index.html", "/Search_page.html", "/Album_page.html", "/Settings_page.html"):
-            filename = {
-                "/": "index.html",
-                "/index.html": "index.html",
-                "/Search_page.html": "Search_page.html",
-                "/Album_page.html": "Album_page.html",
-                "/Settings_page.html": "Settings_page.html"
-            }[path.path]
-        
+        # Login and registration pages must be available when signed out.
+        if request_path.path in ("/login-page", "/login.html"):
+            filename = "login.html"
             try:
                 with open(BASE_DIR / filename, "rb") as file:
-                    html = file.read()
+                    body = file.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except FileNotFoundError:
+                self.send_error(404, "login.html not found")
+            return
+
+        # Main website pages require a valid session.
+        page_routes = {
+            "/": "index.html",
+            "/home": "index.html",
+            "/index.html": "index.html",
+            "/Search_page.html": "Search_page.html",
+            "/Album_page.html": "Album_page.html",
+            "/Settings_page.html": "Settings_page.html"
+        }
+
+        if request_path.path in page_routes:
+            if not user:
+                self.send_response(302)
+                self.send_header("Location", "/login-page")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+
+            filename = page_routes[request_path.path]
+            try:
+                with open(BASE_DIR / filename, "rb") as file:
+                    body = file.read()
+
+                # Fill in the signed-in user's name on the home page.
+                if filename == "index.html":
+                    username = html_module.escape(user.username).encode("utf-8")
+                    body = body.replace(b"{{username}}", username)
 
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(html)))
+                self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
-                self.wfile.write(html)
-
+                self.wfile.write(body)
             except FileNotFoundError:
                 self.send_error(404, f"{filename} not found")
+            return
 
-        elif path.path.startswith("/Images/"):
-            self.serve_static_file(path.path)
+        if request_path.path.startswith("/Images/"):
+            self.serve_static_file(request_path.path)
+            return
 
-        else:
-            self.send_error(404, "Page not found")
+        self.send_error(404, "Page not found")
 
     def do_POST(self):
         form = self.form()
@@ -326,7 +368,7 @@ class Server(BaseHTTPRequestHandler):
         password = form.get("password", [""])[0]
 
         # Register
-        if self.path == "/register":
+        if urlsplit(self.path).path == "/register":
             hashed = hash_password(password)
 
             try:
@@ -355,11 +397,11 @@ class Server(BaseHTTPRequestHandler):
                 "Set-Cookie",
                 f"session={token}; HttpOnly; SameSite=Strict; Path=/"
             )
-            self.send_header("Location", "/")
+            self.send_header("Location", "/home")
             self.end_headers()
 
         # Login
-        elif self.path == "/login":
+        elif urlsplit(self.path).path == "/login":
             conn = db()
 
             user = conn.execute(
@@ -377,7 +419,7 @@ class Server(BaseHTTPRequestHandler):
                     "Set-Cookie",
                     f"session={token}; HttpOnly; SameSite=Strict; Path=/"
                 )
-                self.send_header("Location", "/")
+                self.send_header("Location", "/home")
                 self.end_headers()
 
             else:
@@ -387,7 +429,7 @@ class Server(BaseHTTPRequestHandler):
                 self.wfile.write(b"Invalid username or password.")
 
         # Logout
-        elif self.path == "/logout":
+        elif urlsplit(self.path).path == "/logout":
             token = self.cookies()
 
             conn = db()

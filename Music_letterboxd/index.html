@@ -1,9 +1,15 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TBD - Sign in</title>
+
+    <title>Simple Login Page</title>
+
     <style>
 
         * {
@@ -100,130 +106,297 @@
             cursor: pointer;
             font-size: 14px;
         }
+
     </style>
+
 </head>
+
 <body>
 
     <div class="login-card" id="loginCard">
+
         <h2>Sign In</h2>
 
         <form id="loginForm">
+
             <div class="input-group">
+
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter username" required>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter username"
+                    required
+                >
+
             </div>
 
             <div class="input-group">
+
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password" required>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter password"
+                    required
+                >
+
             </div>
 
             <button type="submit" class="btn">Login</button>
+
         </form>
 
         <div class="create-account">
-            <button type="button" onclick="showCreateAccount()">Create Account</button>
+
+            <button onclick="showCreateAccount()">
+                Create Account
+            </button>
+
         </div>
 
         <div class="error-message" id="errorMessage"></div>
+
     </div>
 
-    <div class="login-card" id="createAccountCard" style="display: none;">
+
+    <div
+        class="login-card"
+        id="createAccountCard"
+        style="display: none;"
+    >
+
         <h2>Create Account</h2>
 
         <form id="registerForm">
+
             <div class="input-group">
+
                 <label for="registerUsername">Username</label>
-                <input type="text" id="registerUsername" placeholder="Enter username" required>
+
+                <input
+                    type="text"
+                    id="registerUsername"
+                    placeholder="Enter username"
+                    required
+                >
+
             </div>
 
             <div class="input-group">
+
                 <label for="registerPassword">Password</label>
-                <input type="password" id="registerPassword" placeholder="Enter password" required>
+
+                <input
+                    type="password"
+                    id="registerPassword"
+                    placeholder="Enter password"
+                    required
+                >
+
             </div>
 
-            <button type="submit" class="btn">Create Account</button>
+            <button type="submit" class="btn">
+                Create Account
+            </button>
+
         </form>
 
         <div class="create-account">
-            <button type="button" onclick="showLogin()">Back to Login</button>
+
+            <button onclick="showLogin()">
+                Back to Login
+            </button>
+
         </div>
 
         <div class="error-message" id="registerError"></div>
+
     </div>
 
+
+    <div class="login-card success-box" id="dashboardCard">
+
+        <h2>Welcome Back!</h2>
+
+        <p>You have successfully logged in.</p>
+
+        <button class="btn" onclick="logout()">Logout</button>
+
+    </div>
+
+
     <script>
-        const SEARCH_URL = '/Search_page.html';
 
         const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const loginCard = document.getElementById('loginCard');
-        const createAccountCard = document.getElementById('createAccountCard');
+
         const errorMessage = document.getElementById('errorMessage');
-        const registerError = document.getElementById('registerError');
+
+        const loginCard = document.getElementById('loginCard');
+
+        const dashboardCard =
+            document.getElementById('dashboardCard');
+
+        const createAccountCard =
+            document.getElementById('createAccountCard');
+
+
+        loginForm.addEventListener('submit', async function(event) {
+
+            event.preventDefault();
+
+            const username =
+                document.getElementById('username').value;
+
+            const password =
+                document.getElementById('password').value;
+
+            try {
+
+                const response = await fetch('/login', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded'
+                    },
+
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+
+                });
+
+                if (response.ok) {
+
+                   window.location.href = '/home';
+
+                } else {
+
+                    errorMessage.innerText =
+                        'Invalid username or password!';
+
+                }
+
+            } catch (error) {
+
+                errorMessage.innerText =
+                    'Could not connect to server.';
+
+            }
+
+        });
+
 
         function showCreateAccount() {
+
             loginCard.style.display = 'none';
+
             createAccountCard.style.display = 'block';
+
         }
+
 
         function showLogin() {
+
             createAccountCard.style.display = 'none';
+
             loginCard.style.display = 'block';
+
         }
 
-        async function sendCredentials(url, username, password) {
-            return fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ username: username, password: password })
-            });
-        }
 
-        loginForm.addEventListener('submit', async function (event) {
+        const registerForm =
+            document.getElementById('registerForm');
+
+
+        registerForm.addEventListener('submit', async function(event) {
+
             event.preventDefault();
 
-            try {
-                const response = await sendCredentials(
-                    '/login',
-                    document.getElementById('username').value,
-                    document.getElementById('password').value
-                );
+            const username =
+                document.getElementById('registerUsername').value;
 
-                if (response.ok) {
-                    errorMessage.innerText = '';
-                    window.location.href = SEARCH_URL;
-                } else {
-                    errorMessage.innerText = 'Invalid username or password!';
-                }
-            } catch (error) {
-                errorMessage.innerText = 'Could not connect to server.';
-            }
-        });
+            const password =
+                document.getElementById('registerPassword').value;
 
-        registerForm.addEventListener('submit', async function (event) {
-            event.preventDefault();
+            const registerError =
+                document.getElementById('registerError');
 
             try {
-                const response = await sendCredentials(
-                    '/register',
-                    document.getElementById('registerUsername').value,
-                    document.getElementById('registerPassword').value
-                );
+
+                const response = await fetch('/register', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded'
+                    },
+
+                    body: new URLSearchParams({
+                        username: username,
+                        password: password
+                    })
+
+                });
 
                 if (response.ok) {
-                    registerError.innerText = '';
-                    window.location.href = SEARCH_URL;
+                    window.location.href = '/home';
+
                 } else if (response.status === 409) {
-                    registerError.innerText = 'Username already exists.';
+
+                    registerError.innerText =
+                        'Username already exists.';
+
                 } else {
-                    registerError.innerText = 'Could not create account.';
+
+                    registerError.innerText =
+                        'Could not create account.';
+
                 }
+
             } catch (error) {
-                registerError.innerText = 'Could not connect to server.';
+
+                registerError.innerText =
+                    'Could not connect to server.';
+
             }
+
         });
+
+
+        async function logout() {
+
+            try {
+
+                await fetch('/logout', {
+
+                    method: 'POST'
+
+                });
+
+                loginForm.reset();
+
+                dashboardCard.style.display = 'none';
+
+                loginCard.style.display = 'block';
+
+            } catch (error) {
+
+                errorMessage.innerText =
+                    'Could not connect to server.';
+
+            }
+
+        }
+
     </script>
 
 </body>
+
 </html>

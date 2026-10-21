@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>albumly - Home</title>
+<style>
+* { box-sizing: border-box; }
+:root {
+    --bg: #10151d;
+    --panel: #171f2b;
+    --border: #293443;
+    --text: #edf2fc;
+    --muted: #9baec8;
+    --accent: #36d6ae;
+    --purple: #a78bfa;
+}
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+a { color: inherit; text-decoration: none; }
+header {
+    height: 68px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 0 25px;
+    border-bottom: 1px solid var(--border);
+    background: #111720;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.logo { font-size: 26px; font-weight: 800; white-space: nowrap; }
+.logo span { color: var(--purple); }
+.search {
+    flex: 1;
+    max-width: 650px;
+    padding: 12px 17px;
+    border-radius: 24px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+}
+.username { margin-left: auto; color: var(--muted); }
+.layout {
+    display: grid;
+    grid-template-columns: 205px minmax(0, 1fr) 275px;
+    gap: 25px;
+    max-width: 1600px;
+    margin: auto;
+    padding: 24px;
+}
+.sidebar a {
+    display: block;
+    padding: 12px;
+    margin-bottom: 5px;
+    border-radius: 7px;
+    color: var(--muted);
+}
+.sidebar a:hover, .sidebar a.active {
+    background: #263244;
+    color: white;
+}
+.sidebar h4 {
+    color: #8094b0;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin: 28px 12px 10px;
+}
+main { min-width: 0; }
+h1 { font-size: 28px; margin: 0 0 8px; }
+.subtitle { color: var(--muted); margin: 0 0 28px; }
+.section { margin-top: 30px; }
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+h2 { font-size: 20px; margin: 0; }
+.see-all { color: var(--accent); font-size: 13px; }
+.albums {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 13px;
+}
+.album { min-width: 0; }
+.cover {
+    aspect-ratio: 1;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+    background: var(--panel);
+}
+.album-title {
+    font-size: 13px;
+    font-weight: 650;
+    margin-top: 9px;
+    line-height: 1.4;
+}
+.artist { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.rating { color: var(--accent); font-size: 13px; margin-top: 7px; }
+.review {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    padding: 17px 0;
+    border-top: 1px solid var(--border);
+}
+.avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #347ca5);
+    display: grid;
+    place-items: center;
+    font-weight: bold;
+}
+.review-meta { color: var(--muted); font-size: 12px; }
+.review strong { color: var(--text); }
+.review p { color: #b7c5d9; font-size: 13px; line-height: 1.6; margin: 7px 0 0; }
+.profile, .side-section {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 17px;
+    margin-bottom: 18px;
+    background: #121923;
+}
+.profile-name { font-size: 19px; font-weight: 700; }
+.handle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.stats { display: flex; justify-content: space-between; margin-top: 22px; text-align: center; }
+.stats strong { display: block; font-size: 19px; }
+.stats span { color: var(--muted); font-size: 11px; }
+.side-section h3 { font-size: 15px; margin: 0 0 15px; }
+.side-album {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 13px 0;
+}
+.side-album img { width: 48px; height: 48px; object-fit: cover; border-radius: 5px; }
+.side-album strong { font-size: 12px; display: block; }
+.side-album small { color: var(--muted); font-size: 11px; }
+.logout {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 9px 13px;
+    border-radius: 6px;
+    background: #263244;
+    color: white;
+    border: 1px solid var(--border);
+    cursor: pointer;
+}
+.logout:hover { background: #38465c; }
+@media (max-width: 1100px) {
+    .layout { grid-template-columns: 170px minmax(0, 1fr); }
+    .right-sidebar { display: none; }
+    .albums { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+    header { padding: 12px; gap: 12px; flex-wrap: wrap; height: auto; }
+    .logo { font-size: 22px; }
+    .search { order: 3; flex-basis: 100%; }
+    .layout { display: block; padding: 17px; }
+    .sidebar { display: flex; overflow-x: auto; gap: 5px; margin-bottom: 24px; }
+    .sidebar a { white-space: nowrap; }
+    .sidebar h4 { display: none; }
+    .albums { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    h1 { font-size: 24px; }
+}
+
+.settings-link {
+    color: var(--text);
+    background: #263244;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    white-space: nowrap;
+    font-size: 13px;
+}
+.settings-link:hover { background: #38465c; }
+
+</style>
+</head>
+<body>
+
+<header>
+    <a class="logo" href="/home"><span>●</span> albumly</a>
+    <input class="search" id="search" placeholder="Search albums or artists...">
+    <a class="settings-link" href="/Settings_page.html">⚙ Settings</a>
+    <div class="username">{{username}}</div>
+</header>
+
+<div class="layout">
+    <nav class="sidebar">
+        <a class="active" href="/home">⌂ &nbsp; Home</a>
+        <a href="/Search_page.html">⌕ &nbsp; Search Albums</a>
+        <a href="/Settings_page.html">⚙ &nbsp; Settings</a>
+        <a href="#discover">◎ &nbsp; Discover</a>
+        <a href="#albums">♫ &nbsp; Albums</a>
+        <a href="#reviews">▤ &nbsp; Reviews</a>
+        <a href="#lists">☷ &nbsp; Lists</a>
+        <h4>YOUR LIBRARY</h4>
+        <a href="#liked">♡ &nbsp; Liked Albums</a>
+        <a href="#reviews">▧ &nbsp; Your Reviews</a>
+        <a href="#watchlist">♧ &nbsp; Watchlist</a>
+        <button class="logout" onclick="logout()">Log out</button>
+    </nav>
+
+    <main>
+        <h1>Welcome back, {{username}}</h1>
+        <p class="subtitle">Discover music. Rate albums. Share your taste.</p>
+
+        <section class="section" id="discover">
+            <div class="section-heading">
+                <h2>Featured Albums</h2>
+                <a class="see-all" href="#albums">Explore →</a>
+            </div>
+            <div class="albums" id="albumGrid"></div>
+        </section>
+
+        <section class="section" id="reviews">
+            <div class="section-heading">
+                <h2>Recent Reviews</h2>
+            </div>
+            <div class="review">
+                <div class="avatar">S</div>
+                <div>
+                    <div class="review-meta"><strong>sarah</strong> reviewed an album</div>
+                    <strong>After Hours</strong>
+                    <div class="rating">★★★★★</div>
+                    <p>A dark, atmospheric album that gets better with every listen.</p>
+                </div>
+            </div>
+            <div class="review">
+                <div class="avatar">M</div>
+                <div>
+                    <div class="review-meta"><strong>mike</strong> reviewed an album</div>
+                    <strong>Blonde</strong>
+                    <div class="rating">★★★★★</div>
+                    <p>Beautiful production and songwriting that sticks with you.</p>
+                </div>
+            </div>
+            <div class="review">
+                <div class="avatar">E</div>
+                <div>
+                    <div class="review-meta"><strong>emily</strong> reviewed an album</div>
+                    <strong>IGOR</strong>
+                    <div class="rating">★★★★☆</div>
+                    <p>An incredible project with a sound all its own.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="albums">
+            <div class="section-heading">
+                <h2>Popular Albums</h2>
+            </div>
+            <p class="subtitle">Find something new to listen to.</p>
+            <div class="albums" id="popularGrid"></div>
+        </section>
+    </main>
+
+    <aside class="right-sidebar">
+        <div class="profile">
+            <div class="profile-name">{{username}}</div>
+            <div class="handle">@{{username}}</div>
+            <div class="stats">
+                <div><strong>0</strong><span>Reviews</span></div>
+                <div><strong>0</strong><span>Following</span></div>
+                <div><strong>0</strong><span>Followers</span></div>
+            </div>
+        </div>
+
+        <div class="side-section">
+            <h3>Your Top Rated Albums</h3>
+            <p class="subtitle" style="font-size:13px;margin-bottom:0">
+                Your ratings will appear here as you review albums.
+            </p>
+        </div>
+
+        <div class="side-section">
+            <h3>Your Music Diary</h3>
+            <p class="subtitle" style="font-size:13px;margin-bottom:0">
+                Start rating albums to build your personal music history.
+            </p>
+        </div>
+    </aside>
+</div>
+
+<script>
+async function loadAlbums(query = "popular") {
+    const grid = document.getElementById("albumGrid");
+    const popularGrid = document.getElementById("popularGrid");
+
+    grid.innerHTML = "<p>Loading albums from Spotify...</p>";
+
+    try {
+        const response = await fetch(
+            "/api/albums?q=" + encodeURIComponent(query)
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not load albums");
+        }
+
+        const data = await response.json();
+
+        renderAlbums(data.albums, grid);
+
+        if (popularGrid.dataset.loaded !== "true") {
+            renderAlbums(data.albums.slice().reverse(), popularGrid);
+            popularGrid.dataset.loaded = "true";
+        }
+
+    } catch (error) {
+        grid.innerHTML =
+            "<p>Could not load albums. Check your Spotify API setup.</p>";
+    }
+}
+
+function renderAlbums(albums, grid) {
+    grid.innerHTML = "";
+
+    if (!albums.length) {
+        grid.textContent = "No albums found. Try another search.";
+        return;
+    }
+
+    albums.forEach(album => {
+        const card = document.createElement("article");
+        card.className = "album";
+
+        const link = document.createElement("a");
+        link.href = album.spotify_url || "#";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        const image = document.createElement("img");
+        image.className = "cover";
+        image.alt = album.title + " album cover";
+        image.loading = "lazy";
+
+        if (album.album_cover_url) {
+            image.src = album.album_cover_url;
+        }
+
+        const title = document.createElement("div");
+        title.className = "album-title";
+        title.textContent = album.title;
+
+        const artist = document.createElement("div");
+        artist.className = "artist";
+        artist.textContent =
+            album.artist + " · " + (album.release_year || "Year unknown");
+
+        link.append(image, title, artist);
+        card.appendChild(link);
+
+        const spotifyLink = document.createElement("a");
+        spotifyLink.href = album.spotify_url || "#";
+        spotifyLink.target = "_blank";
+        spotifyLink.rel = "noopener noreferrer";
+        spotifyLink.className = "see-all";
+        spotifyLink.style.display = "inline-block";
+        spotifyLink.style.marginTop = "8px";
+        spotifyLink.textContent = "Open in Spotify ↗";
+
+        card.appendChild(spotifyLink);
+        grid.appendChild(card);
+    });
+}
+
+const search = document.getElementById("search");
+
+search.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        loadAlbums(search.value.trim() || "popular");
+    }
+});
+
+async function logout() {
+    try {
+        const response = await fetch("/logout", {
+            method: "POST"
+        });
+
+        if (response.ok) {
+            window.location.href = "/";
+        } else {
+            alert("Could not log out.");
+        }
+    } catch (error) {
+        alert("Could not connect to server.");
+    }
+}
+
+loadAlbums();
+</script>
+</body>
+</html>
