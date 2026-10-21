@@ -26,7 +26,6 @@
             position: relative;
         }
 
-        /* Home button */
         .home-button {
             color: white;
             text-decoration: none;
@@ -39,13 +38,11 @@
             background-color: #666;
         }
 
-        /* Website name */
         .website-title {
             margin: 0;
             font-size: 24px;
         }
 
-        /* Centered page title */
         .page-title {
             margin: 0;
             font-size: 30px;
@@ -67,7 +64,10 @@
             flex-shrink: 0;
             background-color: #222;
             color: white;
-            padding: 25px 15px 25px;
+            padding: 25px 15px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
 
         .sidebar h2 {
@@ -98,6 +98,37 @@
         .tab-button.active {
             background-color: #764ba2;
             color: white;
+        }
+
+        /* Back arrow: bottom-left corner */
+        .back-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            position: absolute;
+            bottom: 20px;
+            left: 15px;
+
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 8px;
+
+            background-color: #383838;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .back-button:hover {
+            background-color: #764ba2;
+        }
+
+        .back-button:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 3px;
         }
 
         /* Right-side content area */
@@ -152,6 +183,19 @@
             background-color: #962d22;
         }
 
+        /* Profile image */
+        .profile-image {
+            display: block;
+            width: 120px;
+            height: 120px;
+            max-width: 120px;
+            max-height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #764ba2;
+            margin: 0 auto 25px;
+        }
+
         /* Small screens */
         @media (max-width: 600px) {
             .page-title {
@@ -171,6 +215,7 @@
 
             .sidebar {
                 width: 100%;
+                min-height: 400px;
             }
 
             .sidebar h2 {
@@ -180,20 +225,6 @@
             .content {
                 padding: 15px;
             }
-
-            
-        }
-
-        .profile-image {
-            display: block;
-            width: 120px;
-            height: 120px;
-            max-width: 120px;
-            max-height: 120px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 3px solid #764ba2;
-            margin: 0 auto 25px;
         }
     </style>
 </head>
@@ -209,7 +240,6 @@
         <h1 class="page-title">Settings</h1>
     </header>
 
-
     <!-- SETTINGS LAYOUT -->
     <div class="settings-container">
 
@@ -217,12 +247,12 @@
         <aside class="sidebar">
             <h2>Settings Menu</h2>
 
-            <img src="images/default-icon.png" 
-            alt="Profile Picture" 
-            class="profile-image">
+            <img
+                src="Images/default-icon.png"
+                alt="Profile Picture"
+                class="profile-image"
+            >
 
-
- 
             <button
                 class="tab-button active"
                 data-tab="account">
@@ -246,8 +276,17 @@
                 data-tab="logout">
                 Logout
             </button>
-        </aside>
 
+            <!-- BACK ARROW IN BOTTOM-LEFT CORNER -->
+            <button
+                type="button"
+                class="back-button"
+                id="back-button"
+                aria-label="Go back to previous page"
+                title="Go back">
+                &#8592;
+            </button>
+        </aside>
 
         <!-- RIGHT CONTENT AREA -->
         <main class="content">
@@ -263,7 +302,8 @@
                     <input
                         type="text"
                         id="username"
-                        placeholder="Enter username">
+                        placeholder="Enter username"
+                    >
 
                     <br><br>
 
@@ -272,7 +312,8 @@
                     <input
                         type="email"
                         id="email"
-                        placeholder="Enter email address">
+                        placeholder="Enter email address"
+                    >
 
                     <br><br>
 
@@ -281,7 +322,6 @@
                     </button>
                 </form>
             </section>
-
 
             <!-- ACCOUNT DELETION -->
             <section id="deletion" class="tab-content">
@@ -300,7 +340,6 @@
                 </button>
             </section>
 
-
             <!-- FAQ / HELP -->
             <section id="help" class="tab-content">
                 <h2>FAQ / Help</h2>
@@ -313,13 +352,12 @@
 
                 <h3>How do I delete my account?</h3>
                 <p>
-                    Open Account Deletion tab to the left.
+                    Open the Account Deletion tab to the left.
                 </p>
 
                 <h3>How do I contact support?</h3>
                 <p> XXXXXX@gmail.com, 123-456-7890</p>
             </section>
-
 
             <!-- LOGOUT -->
             <section id="logout" class="tab-content">
@@ -338,8 +376,7 @@
         </main>
     </div>
 
-
-    <!-- TAB SWITCHING -->
+    <!-- TAB SWITCHING AND BUTTON BEHAVIOR -->
     <script>
         const tabButtons =
             document.querySelectorAll(".tab-button");
@@ -347,23 +384,20 @@
         const tabContents =
             document.querySelectorAll(".tab-content");
 
+        // Tab switching
         tabButtons.forEach(button => {
             button.addEventListener("click", () => {
 
-                // Remove active state from all tabs
                 tabButtons.forEach(tab => {
                     tab.classList.remove("active");
                 });
 
-                // Hide all right-side panels
                 tabContents.forEach(panel => {
                     panel.classList.remove("active");
                 });
 
-                // Highlight the selected sidebar tab
                 button.classList.add("active");
 
-                // Display its matching content panel
                 const targetId = button.dataset.tab;
 
                 document.getElementById(targetId)
@@ -375,7 +409,10 @@
         document.getElementById("account-form")
             .addEventListener("submit", event => {
                 event.preventDefault();
-                alert("Connect this form to your account-saving system.");
+
+                alert(
+                    "Connect this form to your account-saving system."
+                );
             });
 
         // Demo account deletion behavior
@@ -386,19 +423,45 @@
                 );
 
                 if (confirmed) {
-                    alert("Connect this to your account deletion system.");
+                    alert(
+                        "Connect this to your account deletion system."
+                    );
                 }
             });
 
-        // Demo logout behavior
+        // Logout: Confirm and redirect to index.html
         document.getElementById("logout-button")
-            .addEventListener("click", () => {
+            .addEventListener("click", async () => {
+
                 const confirmed = confirm(
                     "Are you sure you want to log out?"
                 );
 
                 if (confirmed) {
-                    alert("Connect this to your authentication system.");
+                    try {
+                        // Request logout from the server
+                        await fetch("/logout", {
+                            method: "POST"
+                        });
+                    } catch (error) {
+                        console.error(
+                            "Logout request failed:",
+                            error
+                        );
+                    } finally {
+                        // Redirect to the login page
+                        window.location.href = "index.html";
+                    }
+                }
+            });
+
+        // Back arrow: Return to the previous page
+        document.getElementById("back-button")
+            .addEventListener("click", () => {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = "index.html";
                 }
             });
     </script>

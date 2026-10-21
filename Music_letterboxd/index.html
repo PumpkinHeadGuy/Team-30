@@ -989,6 +989,17 @@
                     const result = document.createElement('article');
                     result.className = 'album-result';
 
+                    result.style.cursor = 'pointer';
+
+                    result.addEventListener('click', function() {
+
+                        if (event.target.closest('a, button')) return;
+
+                        sessionStorage.setItem('selectedAlbum', JSON.stringify(album));
+                        window.location.href = '/Album_page.html';
+                    });
+
+
                     const cover = album.album_cover_url
                         ? document.createElement('img')
                         : document.createElement('div');
@@ -1023,7 +1034,8 @@
 
                     reviewButton.type = 'button';
 
-                    reviewButton.addEventListener('click', function() {
+                    reviewButton.addEventListener('click', function(event) {
+                        event.stopPropagation();
                         openReviewMenu(album);
                     });
 
@@ -1038,6 +1050,13 @@
                     : error.message;
             }
         });
+
+        const initialQuery = new URLSearchParams(window.location.search).get('q');
+
+        if (initialQuery) {
+            document.getElementById('albumQuery').value = initialQuery;
+            document.getElementById('albumSearchForm').requestSubmit();
+        }    
 
     </script>
 

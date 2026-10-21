@@ -10,6 +10,7 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlsplit
 from http.cookies import SimpleCookie
+import mimetypes
 
 BASE_DIR = Path(__file__).resolve().parent
 DB = BASE_DIR / "server.db"
@@ -212,6 +213,37 @@ class Server(BaseHTTPRequestHandler):
         data = self.rfile.read(size).decode()
         return parse_qs(data)
 
+    def serve_static_file(self, path):
+        if not path.startswith("/Images/"):
+            self.send_error(404, "File not found")
+            return
+
+        relative_path = path.lstrip("/")
+        file_path = (BASE_DIR / relative_path).resolve()
+        images_dir = (BASE_DIR / "Images").resolve()
+
+        if not file_path.is_relative_to(images_dir):
+            self.send_error(403, "Forbidden")
+            return
+
+        if not file_path.is_file():
+            self.send_error(404, "Image not found")
+            return
+
+        content_type = (
+            mimetypes.guess_type(str(file_path))[0]
+            or "application/octet-stream"
+        )
+
+        with open(file_path, "rb") as file:
+            data = file.read()
+
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)    
+
     def do_GET(self):
         token = self.cookies()
         user = get_user(token)
@@ -258,24 +290,30 @@ class Server(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
 
-        elif path.path == "/":
+        elif path.path in ("/", "/Album_page.html", "/Settings_page.html"):
+            filename = {
+                "/": "index.html",
+                "/Album_page.html": "Album_page.html",
+                "/Settings_page.html": "Settings_page.html"
+            }[path.path]
+
             try:
-                with open(BASE_DIR / "index.html", "rb") as file:
+                with open(BASE_DIR / filename, "rb") as file:
                     html = file.read()
 
                 self.send_response(200)
-                self.send_header("Content-Type", "text/html")
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(html)))
                 self.end_headers()
                 self.wfile.write(html)
 
             except FileNotFoundError:
-                self.send_response(404)
-                self.end_headers()
-                self.wfile.write(b"index.html not found")
+                self.send_error(404, f"{filename} not found")
 
+        elif path.path.startswith("/Images/"):
+            self.serve_static_file(path.path)
         else:
-            self.send_response(404)
-            self.end_headers()
+            self.send_error(404, "Page not found")
 
     def do_POST(self):
         form = self.form()
