@@ -562,14 +562,6 @@
 
                 <div class="form-group">
                     <label for="reviewUsername">Your Username</label>
-                    <input
-                        type="text"
-                        id="reviewUsername"
-                        placeholder="Enter your username"
-                        maxlength="60"
-                        autocomplete="username"
-                        required
-                    >
                 </div>
 
                 <div class="form-group">
@@ -646,6 +638,7 @@
     const ratingHint = document.getElementById('ratingHint');
 
     let selectedRating = 0;
+    let currentAlbum = null;
     let searchController = null;
 
     // Show album details on this page.
@@ -677,8 +670,8 @@
 
         // Clear the existing page reviews when changing albums.
         // The review list itself is not saved to the server by this code.
-        reviewList.innerHTML =
-            '<p id="noReviews">No reviews yet. Be the first!</p>';
+        currentAlbum = album; 
+        loadReviews(album.id);
 
         resultsSection.hidden = true;
 
@@ -867,8 +860,6 @@
         reviewForm.reset();
         setRating(0);
         backdrop.hidden = false;
-
-        document.getElementById('reviewUsername').focus();
     }
 
     // Close the popup.
@@ -924,78 +915,68 @@
     });
 
     // Submit and display the review.
-    reviewForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        const username = document
-            .getElementById('reviewUsername')
-            .value.trim();
-
-        const reviewText = document
-            .getElementById('reviewText')
-            .value.trim();
-
-        if (!username) {
-            document.getElementById('reviewUsername').focus();
-            return;
-        }
-
-        if (!reviewText) {
-            document.getElementById('reviewText').focus();
-            return;
-        }
-
-        if (selectedRating === 0) {
-            ratingHint.textContent =
-                'Please select a rating before submitting.';
-            return;
-        }
-
-        // Remove the empty-state message.
-        const emptyMessage = document.getElementById('noReviews');
-
-        if (emptyMessage) {
-            emptyMessage.remove();
-        }
-
-        // Create the review card.
+    function buildReviewCard(username, rating, text, createdAt) {
         const card = document.createElement('article');
         card.className = 'review';
-
         const header = document.createElement('div');
         header.className = 'review-header';
-
         const name = document.createElement('h3');
         name.textContent = username;
-
-        const rating = document.createElement('div');
-        rating.className = 'review-rating';
-        rating.textContent =
-            '★'.repeat(selectedRating) +
-            '☆'.repeat(5 - selectedRating);
-
-        header.append(name, rating);
-
+        const stars = document.createElement('div');
+        stars.className = 'review-rating';
+        const full = Math.round(rating || 0);
+        stars.textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
+        header.append(name, stars);
         const content = document.createElement('p');
-        content.textContent = reviewText;
-
+        content.textContent = text || '';
         const date = document.createElement('div');
         date.className = 'review-date';
-        date.textContent = new Date().toLocaleDateString(
-            undefined,
-            {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            }
-        );
-
+        date.textContent = new Date(createdAt).toLocaleDateString(
+            undefined, { year: 'numeric', month: 'short', day: 'numeric' });
         card.append(header, content, date);
-        reviewList.appendChild(card);
+        return card;
+    }
 
+    async function loadReviews(albumId) {
+        reviewList.innerHTML = '';
+        const response = await fetch('/api/reviews?album_id=' + encodeURIComponent(albumId));
+        if (!response.ok) { reviewList.textContent = 'Could not load reviews.'; return; }
+        const { reviews } = await response.json();
+        if (!reviews.length) {
+            reviewList.innerHTML = '<p id="noReviews">No reviews yet. Be the first!</p>';
+            return;
+        }
+        reviews.forEach(r => reviewList.appendChild(
+            buildReviewCard(r.username, r.rating, r.body, r.created_at)));
+    }
+
+    reviewForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const reviewText = document.getElementById('reviewText').value.trim();
+        if (!currentAlbum) return;
+        if (!reviewText) { document.getElementById('reviewText').focus(); return; }
+        if (selectedRating === 0) {
+            ratingHint.textContent = 'Please select a rating before submitting.';
+            return;
+        }
+        const response = await fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                spotify_album_id: currentAlbum.id,
+                album_name: currentAlbum.title,
+                artist_name: currentAlbum.artist,
+                release_year: currentAlbum.release_year,
+                cover_url: currentAlbum.album_cover_url,
+                rating: selectedRating,
+                body: reviewText
+            })
+        });
+        if (!response.ok) { ratingHint.textContent = 'Could not save your review.'; return; }
         reviewForm.reset();
         setRating(0);
         closePopup();
+        loadReviews(currentAlbum.id);
     });
 </script>
 

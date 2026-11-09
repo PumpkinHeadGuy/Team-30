@@ -1,5 +1,5 @@
 from os import path
-import sqlite3
+import psycopg
 import hashlib
 import secrets
 import json
@@ -20,6 +20,16 @@ HOST = "127.0.0.1"
 PORT = 8080
 
 load_dotenv(BASE_DIR / ".env")
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def db():
+    return psycopg.connect(DATABASE_URL)
+
+def setup():
+    # Tables are created once in the Supabase SQL Editor.
+    # This just confirms the connection works at startup.
+    with db() as conn:
+        conn.execute("SELECT 1")
 
 
 class Album:
@@ -51,49 +61,6 @@ class User:
 
     def add_friend(self, friend_user):
         self.friends.append(friend_user)
-# Database
-def db():
-    return sqlite3.connect(DB)
-
-def setup():
-    conn = db()
-    
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY,
-            username TEXT UNIQUE,
-            password TEXT,
-            spotify_id TEXT
-        ) 
-        """)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS sessions ( 
-         token TEXT PRIMARY KEY,
-         user_id INTEGER 
-    ) 
-    """) 
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS albums (
-            id INTEGER PRIMARY KEY,
-            spotify_id TEXT UNIQUE,
-            title TEXT,
-            artist TEXT,
-            release_year INTEGER,
-            album_cover_url TEXT
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS ratings (
-            user_id INTEGER,
-            album_id INTEGER,
-            rating INTEGER,
-            review TEXT,
-            UNIQUE(user_id, album_id)
-        )
-    """)
-    conn.commit()
-    conn.close()
 
 # Passwords
 def hash_password(password):
@@ -124,36 +91,21 @@ def check_password(password, stored):
 # Sessions
 def new_session(user_id):
     token = secrets.token_urlsafe(32)
-
-    conn = db()
-    conn.execute(
-        "INSERT INTO sessions VALUES (?, ?)",
-        (token, user_id)
-    )
-    conn.commit()
-    conn.close()
-
+    with db() as conn:
+        conn.execute("INSERT INTO sessions (token, user_id) VALUES (%s, %s)",
+                     (token, user_id))
     return token
 
 def get_user(token):
     if not token:
         return None
-
-    conn = db()
-
-    row = conn.execute("""
-        SELECT users.id, users.username
-        FROM users
-        JOIN sessions ON users.id = sessions.user_id
-        WHERE sessions.token = ?
-    """, (token,)).fetchone()
-
-    conn.close()
-
-    if row:
-        return User(row[0], row[1])
-
-    return None
+    with db() as conn:
+        row = conn.execute("""
+            SELECT users.id, users.username
+            FROM users JOIN sessions ON users.id = sessions.user_id
+            WHERE sessions.token = %s
+        """, (token,)).fetchone()
+    return User(row[0], row[1]) if row else None
 
 def spotify_access_token():
     client_id = os.environ.get("SPOTIFY_CLIENT_ID")
@@ -205,6 +157,45 @@ def search_spotify_albums(query):
 
 # Server
 class Server(BaseHTTPRequestHandler):
+
+    def save_review(self, raw):
+        user = get_user(self.cookies())
+        if not user:
+            self.send_json(401, {"error": "Authentication required"})
+            return
+        try:
+            d = json.loads(raw)
+            album_id, title = d["spotify_album_id"], d["album_name"]
+            rating = d.get("rating")
+            if rating is not None:
+                rating = float(rating)
+                if not 0.5 <= rating <= 5:
+                    raise ValueError
+        except (KeyError, ValueError, TypeError):
+            self.send_json(400, {"error": "Invalid review"})
+            return
+
+        with db() as conn:
+            conn.execute("""
+                INSERT INTO reviews (user_id, spotify_album_id, album_name, artist_name,
+                                     release_year, cover_url, rating, body, liked, listened_on)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (user_id, spotify_album_id) DO UPDATE SET
+                    rating = EXCLUDED.rating, body = EXCLUDED.body,
+                    liked = EXCLUDED.liked, listened_on = EXCLUDED.listened_on,
+                    created_at = now()
+            """, (user.id, album_id, title, d.get("artist_name"), d.get("release_year"),
+                  d.get("cover_url"), rating, d.get("body"), bool(d.get("liked")),
+                  d.get("listened_on") or None))
+        self.send_json(200, {"ok": True})
+
+    def send_json(self, status, payload):
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def cookies(self):
         cookie = SimpleCookie(self.headers.get("Cookie"))
@@ -303,6 +294,38 @@ class Server(BaseHTTPRequestHandler):
             self.wfile.write(body)
             return
 
+        if request_path.path == "/api/reviews":
+            if not user:
+                self.send_json(401, {"error": "Authentication required"})
+                return
+            params = parse_qs(request_path.query)
+            album_id = params.get("album_id", [""])[0]
+
+            sql = """SELECT u.username, r.spotify_album_id, r.album_name, r.artist_name,
+                            r.cover_url, r.rating, r.body, r.liked, r.listened_on, r.created_at
+                     FROM reviews r JOIN users u ON u.id = r.user_id"""
+            if params.get("mine", [""])[0] == "1":      # the logged-in user's diary
+                sql += " WHERE r.user_id = %s ORDER BY r.created_at DESC"; args = (user.id,)
+            elif album_id:                               # everyone's reviews of one album
+                sql += " WHERE r.spotify_album_id = %s ORDER BY r.created_at DESC"; args = (album_id,)
+            else:                                        # latest reviews (for the home page)
+                sql += " ORDER BY r.created_at DESC LIMIT 20"; args = ()
+
+            with db() as conn:
+                rows = conn.execute(sql, args).fetchall()
+
+            keys = ["username", "album_id", "album_name", "artist_name", "cover_url",
+                    "rating", "body", "liked", "listened_on", "created_at"]
+            reviews = []
+            for row in rows:
+                item = dict(zip(keys, row))
+                item["rating"] = float(item["rating"]) if item["rating"] is not None else None
+                item["listened_on"] = item["listened_on"].isoformat() if item["listened_on"] else None
+                item["created_at"] = item["created_at"].isoformat()
+                reviews.append(item)
+            self.send_json(200, {"reviews": reviews})
+            return
+
         # Login and registration pages must be available when signed out.
         if request_path.path in ("/login-page", "/login.html"):
             filename = "index.html"
@@ -362,28 +385,29 @@ class Server(BaseHTTPRequestHandler):
         self.send_error(404, "Page not found")
 
     def do_POST(self):
-        form = self.form()
+        raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+        post_path = urlsplit(self.path).path
 
+        if post_path == "/api/reviews":
+            self.save_review(raw)
+            return
+
+        form = parse_qs(raw.decode())
         username = form.get("username", [""])[0]
         password = form.get("password", [""])[0]
-
+        
         # Register
-        if urlsplit(self.path).path == "/register":
+        if post_path == "/register":
             hashed = hash_password(password)
 
             try:
-                conn = db()
-
-                cur = conn.execute(
-                    "INSERT INTO users (username, password) VALUES (?, ?)",
-                    (username, hashed)
-                )
-
-                conn.commit()
-                user_id = cur.lastrowid
-                conn.close()
-
-            except sqlite3.IntegrityError:
+                with db() as conn:
+                    user_id = conn.execute(
+                        "INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id",
+                        (username, hashed)
+                    ).fetchone()[0]
+            
+            except psycopg.errors.UniqueViolation:
                 self.send_response(409)
                 self.send_header("Content-Type", "text/plain")
                 self.end_headers()
@@ -401,15 +425,10 @@ class Server(BaseHTTPRequestHandler):
             self.end_headers()
 
         # Login
-        elif urlsplit(self.path).path == "/login":
-            conn = db()
-
-            user = conn.execute(
-                "SELECT id, password FROM users WHERE username = ?",
-                (username,)
-            ).fetchone()
-
-            conn.close()
+        elif post_path == "/login":
+            with db() as conn:
+                user = conn.execute("SELECT id, password FROM users WHERE username = %s",
+                                    (username,)).fetchone()
 
             if user and check_password(password, user[1]):
                 token = new_session(user[0])
@@ -429,15 +448,11 @@ class Server(BaseHTTPRequestHandler):
                 self.wfile.write(b"Invalid username or password.")
 
         # Logout
-        elif urlsplit(self.path).path == "/logout":
+        elif post_path == "/logout":
             token = self.cookies()
 
-            conn = db()
-
-            conn.execute(
-                "DELETE FROM sessions WHERE token = ?",
-                (token,)
-            )
+            with db() as conn:
+                conn.execute("DELETE FROM sessions WHERE token = %s", (token,))
 
             conn.commit()
             conn.close()

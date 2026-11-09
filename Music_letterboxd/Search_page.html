@@ -734,12 +734,26 @@
             closeReviewMenu();
         });
 
-        document.getElementById('saveReviewButton').addEventListener('click', function() {
-            // TODO: save to Supabase (reviews upsert) using reviewAlbum, selectedRating,
-            // #reviewText, #reviewHeart (aria-pressed) and #listenedAt
+        document.getElementById('saveReviewButton').addEventListener('click', async function () {
+            const response = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    spotify_album_id: reviewAlbum.id,
+                    album_name: reviewAlbum.title,
+                    artist_name: reviewAlbum.artist,
+                    release_year: reviewAlbum.release_year,
+                    cover_url: reviewAlbum.album_cover_url,
+                    rating: selectedRating || null,
+                    body: document.getElementById('reviewText').value.trim() || null,
+                    liked: document.getElementById('reviewHeart').getAttribute('aria-pressed') === 'true',
+                    listened_on: document.getElementById('listenedAt').value || null
+                })
+            });
+            if (!response.ok) { alert('Could not save your review.'); return; }
             closeReviewMenu();
         });
-
+    
         document.getElementById('reviewBackdrop').addEventListener('click', function(event) {
             if (event.target === document.getElementById('reviewBackdrop')) {
                 closeReviewMenu();
