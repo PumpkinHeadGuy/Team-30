@@ -36,9 +36,15 @@ header {
 }
 .logo { font-size: 26px; font-weight: 800; white-space: nowrap; }
 .logo span { color: var(--purple); }
-.top-search {
+
+/* Added live search pop up*/
+.search-container {
+    position: relative;
     flex: 1;
     max-width: 650px;
+}
+.top-search {
+    width: 100%;
 }
 .search {
     display: block;
@@ -58,6 +64,67 @@ header {
     border-color: var(--accent);
     outline: 2px solid #36d6ae33;
 }
+.search-results-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 12px 30px #000a;
+    z-index: 100;
+}
+.search-results-dropdown[hidden] {
+    display: none;
+}
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.search-result-item:last-child {
+    border-bottom: none;
+}
+.search-result-item:hover {
+    background: #202b3c;
+}
+.search-result-item img,
+.search-result-placeholder {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--bg);
+}
+.search-result-info {
+    min-width: 0;
+    flex: 1;
+}
+.search-result-info h4 {
+    margin: 0 0 3px;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.search-result-info p {
+    margin: 0;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .layout {
     display: grid;
     grid-template-columns: 205px minmax(0, 1fr) 275px;
@@ -222,9 +289,12 @@ h2 { font-size: 20px; margin: 0; }
 
 <header>
     <a class="logo" href="/home"><span>●</span> albumly</a>
-    <form class="top-search" id="homeSearchForm">
-        <input class="search" id="search" type="search" placeholder="Search albums or artists..." aria-label="Search albums or artists..." required>
-    </form>
+    <div class="search-container">
+        <form class="top-search" id="homeSearchForm" style="margin:0;">
+            <input class="search" id="search" type="search" placeholder="Search albums or artists..." aria-label="Search albums or artists..." autocomplete="off" required>
+        </form>
+        <div id="searchDropdown" class="search-results-dropdown" hidden></div>
+    </div>
     <a class="settings-link" href="/Settings_page.html">⚙ Settings</a>
 </header>
 
@@ -373,9 +443,10 @@ function renderAlbums(albums, grid) {
         card.className = "album";
 
         const link = document.createElement("a");
-        link.href = album.spotify_url || "#";
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
+        link.href = "/Album_page.html";
+        link.addEventListener("click", () => {
+            sessionStorage.setItem("selectedAlbum", JSON.stringify(album));
+        });
 
         const image = document.createElement("img");
         image.className = "cover";
@@ -412,7 +483,105 @@ function renderAlbums(albums, grid) {
     });
 }
 
-const search = document.getElementById("search");
+// Live Search Elements
+const searchInput = document.getElementById("search");
+const searchDropdown = document.getElementById("searchDropdown");
+let searchTimeout = null;
+let searchController = null;
+
+// Live Search Typing and Dropdown popup
+searchInput.addEventListener("input", () => {
+    const query = searchInput.value.trim();
+    clearTimeout(searchTimeout);
+
+    if (query.length < 2) {
+        searchDropdown.hidden = true;
+        searchDropdown.replaceChildren();
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        fetchAlbumsForDropdown(query);
+    }, 300);
+});
+
+async function fetchAlbumsForDropdown(query) {
+    if (searchController) {
+        searchController.abort();
+    }
+
+    searchController = new AbortController();
+
+    try {
+        const response = await fetch(
+            "/api/albums?q=" + encodeURIComponent(query),
+            { signal: searchController.signal }
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        renderSearchDropdown(data.albums || []);
+
+    } catch (error) {
+        if (error.name !== "AbortError") {
+            console.error("Album search error:", error);
+        }
+    }
+}
+
+function renderSearchDropdown(albums) {
+    searchDropdown.replaceChildren();
+
+    if (albums.length === 0) {
+        searchDropdown.hidden = true;
+        return;
+    }
+
+    albums.forEach(album => {
+        const item = document.createElement("div");
+        item.className = "search-result-item";
+
+        const cover = album.album_cover_url
+            ? document.createElement("img")
+            : document.createElement("div");
+
+        if (album.album_cover_url) {
+            cover.src = album.album_cover_url;
+            cover.alt = album.title;
+        } else {
+            cover.className = "search-result-placeholder";
+        }
+
+        const info = document.createElement("div");
+        info.className = "search-result-info";
+
+        const title = document.createElement("h4");
+        title.textContent = album.title;
+
+        const artist = document.createElement("p");
+        artist.textContent = `${album.artist} · ${album.release_year || "Unknown"}`;
+
+        info.append(title, artist);
+        item.append(cover, info);
+
+        item.addEventListener("click", () => {
+            sessionStorage.setItem("selectedAlbum", JSON.stringify(album));
+            window.location.href = "/Album_page.html";
+        });
+
+        searchDropdown.appendChild(item);
+    });
+
+    searchDropdown.hidden = false;
+}
+
+//Closes the dropdown when clicking outside
+document.addEventListener("click", (e) => {
+    if (!document.querySelector(".search-container").contains(e.target)) {
+        searchDropdown.hidden = true;
+    }
+});
 
 document.querySelectorAll(".profile-avatar").forEach(avatar => {
     avatar.textContent = avatar.dataset.username.trim().charAt(0).toUpperCase() || "?";
@@ -431,7 +600,7 @@ fetch("/api/profile", { headers: { "Accept": "application/json" } })
 
 document.getElementById("homeSearchForm").addEventListener("submit", function(event) {
     event.preventDefault();
-    const query = search.value.trim();
+    const query = searchInput.value.trim();
     if (query) {
         window.location.href = "/Search_page.html?q=" + encodeURIComponent(query);
     }
