@@ -2,250 +2,307 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Website Name</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team 30 - Settings</title>
 
     <style>
-        * {
+        *, *::before, *::after {
             box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #10151d;
+            --panel: #171f2b;
+            --border: #293443;
+            --border-focus: #9baec8;
+            --text: #edf2fc;
+            --muted: #9baec8;
+            --purple: #a78bfa;
+            --purple-hover: #9061f9;
+            --danger: #c0392b;
+            --danger-hover: #962d22;
         }
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Top navigation bar */
-        .top-bar {
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
             display: flex;
             align-items: center;
-            background-color: #764ba2;
-            color: white;
-            padding: 15px 20px;
-            gap: 20px;
-            position: relative;
+            gap: 28px;
+            height: 68px;
+            padding: 0 25px;
+            border-bottom: 1px solid var(--border);
+            background: #111720;
         }
 
-        .home-button {
-            color: white;
-            text-decoration: none;
-            background-color: #444;
-            padding: 10px 15px;
-            border-radius: 5px;
+        .logo {
+            font-size: 26px;
+            font-weight: 800;
+            white-space: nowrap;
         }
 
-        .home-button:hover {
-            background-color: #666;
-        }
-
-        .website-title {
-            margin: 0;
-            font-size: 24px;
+        .logo span {
+            color: var(--purple);
         }
 
         .page-title {
-            margin: 0;
-            font-size: 30px;
-            color: white;
             position: absolute;
             left: 50%;
+            margin: 0;
+            font-size: 24px;
             transform: translateX(-50%);
         }
 
-        /* Main settings layout */
-        .settings-container {
-            display: flex;
-            min-height: calc(100vh - 60px);
+        .username {
+            margin-left: auto;
+            color: var(--muted);
+            font-weight: 500;
         }
 
-        /* Left sidebar */
+        .settings-container {
+            display: flex;
+            min-height: calc(100vh - 68px);
+        }
+
         .sidebar {
-            width: 250px;
-            flex-shrink: 0;
-            background-color: #222;
-            color: white;
-            padding: 25px 15px;
+            position: relative;
             display: flex;
             flex-direction: column;
-            position: relative;
+            align-items: center;
+            flex-shrink: 0;
+            width: 260px;
+            padding: 25px 15px;
+            border-right: 1px solid var(--border);
+            background: #131924;
+            text-align: center;
         }
 
         .sidebar h2 {
             margin-top: 0;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
         }
 
-        /* Sidebar tabs */
-        .tab-button {
+        .profile-image {
             display: block;
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 8px;
-            border: none;
-            border-radius: 5px;
-            background: transparent;
-            color: #ccc;
-            text-align: left;
-            font-size: 16px;
-            cursor: pointer;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
         }
 
-        .tab-button:hover {
-            background-color: #383838;
-            color: white;
+        .tab-button {
+            width: 100%;
+            margin-bottom: 6px;
+            padding: 12px 14px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .tab-button:hover,
+        .tab-button.active {
+            background: var(--border);
+            color: var(--text);
         }
 
         .tab-button.active {
-            background-color: #764ba2;
-            color: white;
+            font-weight: 600;
         }
 
-        /* Back arrow: bottom-left corner */
         .back-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
             position: absolute;
             bottom: 20px;
             left: 15px;
-
-            width: 45px;
-            height: 45px;
-            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
             border-radius: 8px;
-
-            background-color: #383838;
-            color: white;
-            font-size: 30px;
+            background: transparent;
+            color: var(--text);
+            font-size: 20px;
             cursor: pointer;
             transition: background-color 0.2s;
         }
 
-        .back-button:hover {
-            background-color: #764ba2;
+        .back-button:hover,
+        .action-button:hover {
+            background: #232d3d;
         }
 
-        .back-button:focus-visible {
-            outline: 2px solid white;
-            outline-offset: 3px;
+        .back-button:focus-visible,
+        .action-button:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--border-focus);
+            outline-offset: 2px;
         }
 
-        /* Right-side content area */
         .content {
             flex: 1;
             min-width: 0;
-            padding: 30px;
+            padding: 40px;
+            max-width: 900px;
         }
 
-        /* Individual tab panels */
         .tab-content {
             display: none;
-            background-color: white;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--panel);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.2s ease-in-out;
         }
 
-        /* Form fields */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content h2 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+
+        .tab-content h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .tab-content p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .tab-content label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .tab-content input {
-            padding: 10px;
             width: 100%;
-            max-width: 350px;
-            margin-top: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            max-width: 400px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15px;
         }
 
-        /* Content buttons */
+        .tab-content input::placeholder {
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
         .action-button {
-            padding: 10px 16px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 5px;
-            background-color: #764ba2;
-            color: white;
+            border-radius: 6px;
+            background: var(--purple);
+            color: #10151d;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
+            transition: background 0.15s ease;
         }
 
         .action-button:hover {
-            background-color: #5d3786;
+            background: var(--purple-hover);
         }
 
         .delete-button {
-            background-color: #c0392b;
+            background: var(--danger);
+            color: white;
         }
 
         .delete-button:hover {
-            background-color: #962d22;
+            background: var(--danger-hover);
         }
 
-        /* Profile image */
-        .profile-image {
-            display: block;
-            width: 120px;
-            height: 120px;
-            max-width: 120px;
-            max-height: 120px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 3px solid #764ba2;
-            margin: 0 auto 25px;
+        .faq-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
         }
 
-        /* Small screens */
-        @media (max-width: 600px) {
-            .page-title {
-                position: static;
-                transform: none;
-                margin-left: auto;
-                font-size: 24px;
-            }
+        .faq-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
 
-            .website-title {
-                display: none;
-            }
-
-            .settings-container {
-                flex-direction: column;
-            }
-
+        @media (max-width: 700px) {
+            header { gap: 12px; padding: 0 15px;}
+            .logo {font-size: 20px;}
+            .page-title {position: static; margin-left: auto; font-size: 20px; transform: none;}
+            .username {display: none;}
+            .settings-container {flex-direction: column;}
             .sidebar {
                 width: 100%;
-                min-height: 400px;
+                padding: 15px 15px 70px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
             }
-
-            .sidebar h2 {
-                margin-bottom: 15px;
-            }
-
-            .content {
-                padding: 15px;
-            }
+            .profile-image {width: 60px; height: 60px; margin-bottom: 12px;}
+            .back-button {bottom: 15px;}
+            .content {padding: 20px;}
+            .tab-content {padding: 20px;}
+            .tab-content input {max-width: 100%;}
         }
     </style>
 </head>
 
 <body>
-
-    <!-- TOP BAR -->
-    <header class="top-bar">
-        <a href="Search_page.html" class="home-button">Home</a>
-
-        <h1 class="website-title">Website Name</h1>
-
+    <header>
+        <a class="logo" href="/home.html"><span>●</span> albumly</a>
         <h1 class="page-title">Settings</h1>
+        <div class="username">{{username}}</div>
     </header>
 
-    <!-- SETTINGS LAYOUT -->
     <div class="settings-container">
-
-        <!-- LEFT SIDEBAR -->
         <aside class="sidebar">
-            <h2>Settings Menu</h2>
+            <h2>Menu</h2>
 
             <img
                 src="Images/default-icon.png"
@@ -253,69 +310,56 @@
                 class="profile-image"
             >
 
-            <button
-                class="tab-button active"
-                data-tab="account">
+            <button type="button" class="tab-button active" data-tab="account">
                 Account Information
             </button>
 
-            <button
-                class="tab-button"
-                data-tab="deletion">
+            <button type="button" class="tab-button" data-tab="deletion">
                 Account Deletion
             </button>
 
-            <button
-                class="tab-button"
-                data-tab="help">
+            <button type="button" class="tab-button" data-tab="help">
                 FAQ / Help
             </button>
 
-            <button
-                class="tab-button"
-                data-tab="logout">
+            <button type="button" class="tab-button" data-tab="logout">
                 Logout
             </button>
 
-            <!-- BACK ARROW IN BOTTOM-LEFT CORNER -->
             <button
                 type="button"
                 class="back-button"
                 id="back-button"
                 aria-label="Go back to previous page"
-                title="Go back">
-                &#8592;
-            </button>
+                title="Go back"
+            >&#8592;</button>
         </aside>
 
-        <!-- RIGHT CONTENT AREA -->
         <main class="content">
-
-            <!-- ACCOUNT INFORMATION -->
             <section id="account" class="tab-content active">
                 <h2>Account Information</h2>
                 <p>View and manage your account details here.</p>
 
                 <form id="account-form">
-                    <label for="username">Username</label>
-                    <br>
-                    <input
-                        type="text"
-                        id="username"
-                        placeholder="Enter username"
-                    >
+                    <div class="form-group">
+                        <label for="username-input">Username</label>
+                        <input
+                            type="text"
+                            id="username-input"
+                            name="username"
+                            placeholder="Enter username"
+                        >
+                    </div>
 
-                    <br><br>
-
-                    <label for="email">Email Address</label>
-                    <br>
-                    <input
-                        type="email"
-                        id="email"
-                        placeholder="Enter email address"
-                    >
-
-                    <br><br>
+                    <div class="form-group">
+                        <label for="email-input">Email Address</label>
+                        <input
+                            type="email"
+                            id="email-input"
+                            name="email"
+                            placeholder="Enter email address"
+                        >
+                    </div>
 
                     <button type="submit" class="action-button">
                         Save Changes
@@ -323,148 +367,88 @@
                 </form>
             </section>
 
-            <!-- ACCOUNT DELETION -->
             <section id="deletion" class="tab-content">
                 <h2>Account Deletion</h2>
-
                 <p>
-                    Deleting your account will remove
-                    your account information and associated data.
+                    Deleting your account will permanently remove your profile,
+                    information, and associated data. This action cannot be undone.
                 </p>
 
                 <button
                     type="button"
                     class="action-button delete-button"
-                    id="delete-account">
-                    Delete Account
-                </button>
+                    id="delete-account"
+                >Delete Account</button>
             </section>
 
-            <!-- FAQ / HELP -->
             <section id="help" class="tab-content">
                 <h2>FAQ / Help</h2>
 
-                <h3>How do I change my account information?</h3>
-                <p>
-                    Open Account Information, update your details,
-                    and select Save Changes.
-                </p>
+                <div class="faq-item">
+                    <h3>How do I change my account information?</h3>
+                    <p>Open Account Information, update your details, and select Save Changes.</p>
+                </div>
 
-                <h3>How do I delete my account?</h3>
-                <p>
-                    Open the Account Deletion tab to the left.
-                </p>
+                <div class="faq-item">
+                    <h3>How do I delete my account?</h3>
+                    <p>Navigate to the Account Deletion tab on the left menu and click the delete button.</p>
+                </div>
 
-                <h3>How do I contact support?</h3>
-                <p> XXXXXX@gmail.com, 123-456-7890</p>
+                <div class="faq-item">
+                    <h3>How do I contact support?</h3>
+                    <p>You can reach our team via email at support@albumly.com or call 123-456-7890.</p>
+                </div>
             </section>
 
-            <!-- LOGOUT -->
             <section id="logout" class="tab-content">
                 <h2>Logout</h2>
-
-                <p>Are you sure you want to log out?</p>
+                <p>Are you sure you want to end your current session?</p>
 
                 <button
                     type="button"
                     class="action-button"
-                    id="logout-button">
-                    Confirm Logout
-                </button>
+                    id="logout-button"
+                >Confirm Logout</button>
             </section>
-
         </main>
     </div>
 
-    <!-- TAB SWITCHING AND BUTTON BEHAVIOR -->
     <script>
-        const tabButtons =
-            document.querySelectorAll(".tab-button");
+        const tabButtons = document.querySelectorAll(".tab-button");
+        const tabContents = document.querySelectorAll(".tab-content");
 
-        const tabContents =
-            document.querySelectorAll(".tab-content");
-
-        // Tab switching
         tabButtons.forEach(button => {
             button.addEventListener("click", () => {
-
-                tabButtons.forEach(tab => {
-                    tab.classList.remove("active");
-                });
-
-                tabContents.forEach(panel => {
-                    panel.classList.remove("active");
-                });
+                tabButtons.forEach(tab => tab.classList.remove("active"));
+                tabContents.forEach(panel => panel.classList.remove("active"));
 
                 button.classList.add("active");
-
-                const targetId = button.dataset.tab;
-
-                document.getElementById(targetId)
-                    .classList.add("active");
+                document.getElementById(button.dataset.tab).classList.add("active");
             });
         });
 
-        // Demo form behavior
-        document.getElementById("account-form")
-            .addEventListener("submit", event => {
-                event.preventDefault();
+        document.getElementById("account-form").addEventListener("submit", event => {
+            event.preventDefault();
+            alert("Connect this form to your account-saving system.");
+        });
 
-                alert(
-                    "Connect this form to your account-saving system."
-                );
-            });
+        document.getElementById("delete-account").addEventListener("click", () => {
+            if (confirm("Are you sure you want to delete your account?")) {
+                alert("Connect this to your account deletion system.");
+            }
+        });
 
-        // Demo account deletion behavior
-        document.getElementById("delete-account")
-            .addEventListener("click", () => {
-                const confirmed = confirm(
-                    "Are you sure you want to delete your account?"
-                );
+        document.getElementById("logout-button").addEventListener("click", async() => { 
+            window.location.href = "index.html"; 
+        });
 
-                if (confirmed) {
-                    alert(
-                        "Connect this to your account deletion system."
-                    );
-                }
-            });
-
-        // Logout: Confirm and redirect to index.html
-        document.getElementById("logout-button")
-            .addEventListener("click", async () => {
-
-                const confirmed = confirm(
-                    "Are you sure you want to log out?"
-                );
-
-                if (confirmed) {
-                    try {
-                        // Request logout from the server
-                        await fetch("/logout", {
-                            method: "POST"
-                        });
-                    } catch (error) {
-                        console.error(
-                            "Logout request failed:",
-                            error
-                        );
-                    } finally {
-                        // Redirect to the login page
-                        window.location.href = "index.html";
-                    }
-                }
-            });
-
-        // Back arrow: Return to the previous page
-        document.getElementById("back-button")
-            .addEventListener("click", () => {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = "index.html";
-                }
-            });
+        document.getElementById("back-button").addEventListener("click", () => {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
     </script>
-
 </body>
 </html>

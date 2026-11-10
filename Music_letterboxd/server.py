@@ -575,7 +575,7 @@ class Server(BaseHTTPRequestHandler):
                     body = file.read()
 
                 # Fill in the signed-in user's name on the home page.
-                if filename == "home.html":
+                if filename in ("home.html", "Album_page.html"):
                     username = html_module.escape(user.username).encode("utf-8")
                     body = body.replace(b"{{username}}", username)
 
