@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>albumly - Edit Profile</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg: #10151d;
+            --panel: #171f2b;
+            --border: #293443;
+            --text: #edf2fc;
+            --muted: #9baec8;
+            --accent: #36d6ae;
+            --purple: #a78bfa;
+        }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+        a { color: inherit; text-decoration: none; }
+        button, input, textarea { font: inherit; }
+        [hidden] { display: none !important; }
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-height: 68px;
+            padding: 0 25px;
+            border-bottom: 1px solid var(--border);
+            background: #111720;
+        }
+        .logo { font-size: 26px; font-weight: 800; white-space: nowrap; }
+        .logo span { color: var(--purple); }
+        .page-title { margin: 0; font-size: 18px; }
+        main {
+            width: min(950px, 100%);
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+        .intro { margin-bottom: 26px; }
+        .intro h1 { margin: 0 0 8px; font-size: 28px; }
+        .intro p, .slot-details p { color: var(--muted); }
+        .editor-section {
+            margin-top: 24px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #121923;
+        }
+        .editor-section h2 { margin: 0 0 16px; font-size: 19px; }
+        label { display: block; margin-bottom: 8px; font-weight: 650; }
+        textarea,
+        .picker-form input {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            outline: none;
+            background: #121923;
+            color: var(--text);
+        }
+        textarea { min-height: 110px; resize: vertical; }
+        textarea:focus,
+        .picker-form input:focus {
+            border-color: var(--accent);
+            outline: 2px solid #36d6ae33;
+        }
+        .field-help, .status {
+            margin: 7px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .error { color: #ff9a9a; }
+        .favorite-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .favorite-slot {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--panel);
+        }
+        .cover {
+            display: grid;
+            width: 100%;
+            aspect-ratio: 1;
+            place-items: center;
+            border-radius: 6px;
+            background: #121923;
+            color: var(--muted);
+            object-fit: cover;
+        }
+        .slot-details { min-height: 63px; }
+        .slot-details h3 {
+            margin: 10px 0 3px;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+        .slot-details p { margin: 0; font-size: 12px; }
+        .slot-actions { display: flex; gap: 7px; margin-top: 10px; }
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 9px 13px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #263244;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 650;
+            cursor: pointer;
+        }
+        .button:hover { background: #38465c; }
+        .button.primary {
+            border-color: transparent;
+            background: var(--accent);
+            color: #10151d;
+        }
+        .button.primary:hover { background: #5de5c2; }
+        .slot-actions .button { flex: 1; padding-inline: 5px; }
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-top: 22px;
+        }
+        .form-actions .status { flex: 1 1 100%; }
+        .picker-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .6);
+        }
+        .picker-dialog {
+            width: min(760px, 100%);
+            max-height: min(720px, 90vh);
+            overflow-y: auto;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--panel);
+        }
+        .picker-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .picker-header h2 { margin: 0; }
+        .picker-form { display: flex; gap: 10px; margin-top: 16px; }
+        .picker-form input { min-width: 0; flex: 1; }
+        .picker-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .search-result {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            min-width: 0;
+            padding: 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #121923;
+        }
+        .search-result .cover { width: 58px; height: 58px; flex: 0 0 58px; }
+        .result-details { min-width: 0; flex: 1; }
+        .result-details strong { display: block; overflow-wrap: anywhere; font-size: 13px; }
+        .result-details small { display: block; margin: 4px 0 8px; color: var(--muted); }
+        @media (max-width: 700px) {
+            .top-bar { flex-wrap: wrap; gap: 12px; padding: 12px; }
+            .logo { font-size: 22px; }
+            main { padding: 22px 14px 40px; }
+            .favorite-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .editor-section { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a class="logo" href="/home"><span>●</span> albumly</a>
+        <h1 class="page-title">Edit profile</h1>
+    </header>
+
+    <main>
+        <div class="intro">
+            <h1>Edit your profile</h1>
+            <p>Update your bio and choose the albums you want to feature.</p>
+        </div>
+
+        <form id="profileEditor">
+            <section class="editor-section" aria-labelledby="bioHeading">
+                <h2 id="bioHeading">About you</h2>
+                <label for="bioInput">Bio</label>
+                <textarea id="bioInput" maxlength="280" placeholder="A little about your taste in music..."></textarea>
+                <p class="field-help">Up to 280 characters.</p>
+            </section>
+
+            <section class="editor-section" aria-labelledby="favoritesHeading">
+                <h2 id="favoritesHeading">Favorite albums</h2>
+                <div class="favorite-grid" id="favoriteGrid"></div>
+            </section>
+
+            <div class="form-actions">
+                <button class="button primary" type="submit" id="saveProfile">Save profile</button>
+                <a class="button" href="/profile">Cancel</a>
+                <p class="status" id="saveStatus" role="status" aria-live="polite"></p>
+            </div>
+        </form>
+    </main>
+
+    <div class="picker-backdrop" id="albumPicker" hidden>
+        <section class="picker-dialog" role="dialog" aria-modal="true" aria-labelledby="pickerHeading">
+            <div class="picker-header">
+                <h2 id="pickerHeading">Choose a favorite album</h2>
+                <button class="button" type="button" id="closePicker" aria-label="Close album search">×</button>
+            </div>
+            <form class="picker-form" id="albumSearchForm">
+                <input type="search" id="albumSearchInput" placeholder="Search albums or artists..." aria-label="Search albums or artists" required>
+                <button class="button primary" type="submit">Search</button>
+            </form>
+            <p class="status" id="searchStatus" role="status" aria-live="polite"></p>
+            <div class="picker-results" id="pickerResults"></div>
+        </section>
+    </div>
+
+    <script>
+        const favoriteGrid = document.getElementById("favoriteGrid");
+        const albumPicker = document.getElementById("albumPicker");
+        const pickerResults = document.getElementById("pickerResults");
+        const searchStatus = document.getElementById("searchStatus");
+        const profile = { bio: "", favorites: [null, null, null, null] };
+        let activeSlot = null;
+        let pickerTrigger = null;
+
+        function setStatus(element, message, isError = false) {
+            element.textContent = message;
+            element.classList.toggle("error", isError);
+        }
+
+        function renderFavorites() {
+            favoriteGrid.replaceChildren();
+            profile.favorites.forEach((album, index) => {
+                const card = document.createElement("article");
+                card.className = "favorite-slot";
+                const cover = document.createElement(album && album.album_cover_url ? "img" : "div");
+                cover.className = "cover";
+                if (album && album.album_cover_url) {
+                    cover.src = album.album_cover_url;
+                    cover.alt = album.title + " album cover";
+                } else {
+                    cover.setAttribute("aria-hidden", "true");
+                    cover.textContent = album ? "♪" : "Favorite " + (index + 1);
+                }
+
+                const details = document.createElement("div");
+                details.className = "slot-details";
+                const title = document.createElement("h3");
+                title.textContent = album ? album.title : "Empty slot";
+                const artist = document.createElement("p");
+                artist.textContent = album
+                    ? album.artist + (album.release_year ? " · " + album.release_year : "")
+                    : "Choose an album to feature";
+                details.append(title, artist);
+
+                const actions = document.createElement("div");
+                actions.className = "slot-actions";
+                const choose = document.createElement("button");
+                choose.className = "button primary";
+                choose.type = "button";
+                choose.textContent = album ? "Replace" : "Choose";
+                choose.addEventListener("click", event => openPicker(index, event.currentTarget));
+                actions.appendChild(choose);
+                if (album) {
+                    const remove = document.createElement("button");
+                    remove.className = "button";
+                    remove.type = "button";
+                    remove.textContent = "Remove";
+                    remove.addEventListener("click", () => {
+                        profile.favorites[index] = null;
+                        renderFavorites();
+                    });
+                    actions.appendChild(remove);
+                }
+                card.append(cover, details, actions);
+                favoriteGrid.appendChild(card);
+            });
+        }
+
+        async function loadProfile() {
+            const status = document.getElementById("saveStatus");
+            setStatus(status, "Loading profile...");
+            try {
+                const response = await fetch("/api/profile", {
+                    headers: { "Accept": "application/json" }
+                });
+                if (response.status === 401) {
+                    window.location.replace("/login-page");
+                    return;
+                }
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not load profile.");
+                }
+                profile.bio = data.bio || "";
+                profile.favorites = [null, null, null, null];
+                data.favorites.forEach(album => {
+                    if (album.slot >= 1 && album.slot <= 4) {
+                        profile.favorites[album.slot - 1] = album;
+                    }
+                });
+                document.getElementById("bioInput").value = profile.bio;
+                renderFavorites();
+                setStatus(status, "");
+            } catch (error) {
+                setStatus(status, error.message || "Could not load profile.", true);
+            }
+        }
+
+        function openPicker(slot, trigger) {
+            activeSlot = slot;
+            pickerTrigger = trigger;
+            albumPicker.hidden = false;
+            pickerResults.replaceChildren();
+            setStatus(searchStatus, "Search for an album to feature in slot " + (slot + 1) + ".");
+            document.getElementById("albumSearchInput").focus();
+        }
+
+        function closePicker(restoreFocus = true) {
+            albumPicker.hidden = true;
+            activeSlot = null;
+            if (restoreFocus && pickerTrigger) pickerTrigger.focus();
+            pickerTrigger = null;
+        }
+
+        async function searchAlbums(query) {
+            pickerResults.replaceChildren();
+            setStatus(searchStatus, "Searching...");
+            try {
+                const response = await fetch("/api/albums?q=" + encodeURIComponent(query), {
+                    headers: { "Accept": "application/json" }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Album search failed.");
+                }
+                if (!Array.isArray(data.albums) || !data.albums.length) {
+                    setStatus(searchStatus, "No albums found. Try another search.");
+                    return;
+                }
+                setStatus(searchStatus, "Select an album for favorite " + (activeSlot + 1) + ".");
+                data.albums.forEach(album => {
+                    const card = document.createElement("article");
+                    card.className = "search-result";
+                    const cover = document.createElement(album.album_cover_url ? "img" : "div");
+                    cover.className = "cover";
+                    if (album.album_cover_url) {
+                        cover.src = album.album_cover_url;
+                        cover.alt = "";
+                    } else {
+                        cover.setAttribute("aria-hidden", "true");
+                        cover.textContent = "♪";
+                    }
+                    const details = document.createElement("div");
+                    details.className = "result-details";
+                    const title = document.createElement("strong");
+                    title.textContent = album.title || "Unknown album";
+                    const artist = document.createElement("small");
+                    artist.textContent = (album.artist || "Unknown artist") +
+                        (album.release_year ? " · " + album.release_year : "");
+                    const select = document.createElement("button");
+                    select.className = "button primary";
+                    select.type = "button";
+                    select.textContent = "Select";
+                    select.addEventListener("click", () => {
+                        if (profile.favorites.some((favorite, index) =>
+                            index !== activeSlot && favorite && favorite.id === album.id
+                        )) {
+                            setStatus(searchStatus, "That album is already in your favorites.", true);
+                            return;
+                        }
+                        profile.favorites[activeSlot] = album;
+                        renderFavorites();
+                        closePicker(false);
+                        setStatus(searchStatus, "");
+                    });
+                    details.append(title, artist, select);
+                    card.append(cover, details);
+                    pickerResults.appendChild(card);
+                });
+            } catch (error) {
+                setStatus(searchStatus, error.message || "Album search failed.", true);
+            }
+        }
+
+        document.getElementById("profileEditor").addEventListener("submit", async event => {
+            event.preventDefault();
+            const status = document.getElementById("saveStatus");
+            const saveButton = document.getElementById("saveProfile");
+            saveButton.disabled = true;
+            setStatus(status, "Saving profile...");
+            try {
+                const response = await fetch("/api/profile", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        bio: document.getElementById("bioInput").value,
+                        favorites: profile.favorites
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not save profile.");
+                }
+                window.location.href = "/profile";
+            } catch (error) {
+                setStatus(status, error.message || "Could not save profile.", true);
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+
+        document.getElementById("albumSearchForm").addEventListener("submit", event => {
+            event.preventDefault();
+            searchAlbums(document.getElementById("albumSearchInput").value.trim());
+        });
+        document.getElementById("closePicker").addEventListener("click", () => closePicker());
+        albumPicker.addEventListener("click", event => {
+            if (event.target === albumPicker) closePicker();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && !albumPicker.hidden) closePicker();
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>
