@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team 30 - Your Profile</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg: #10151d;
+            --panel: #171f2b;
+            --border: #293443;
+            --text: #edf2fc;
+            --muted: #9baec8;
+            --accent: #36d6ae;
+            --purple: #a78bfa;
+        }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+        a { color: inherit; text-decoration: none; }
+        button, input, textarea { font: inherit; }
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            min-height: 68px;
+            padding: 0 25px;
+            border-bottom: 1px solid var(--border);
+            background: #111720;
+        }
+        .logo { font-size: 26px; font-weight: 800; white-space: nowrap; }
+        .logo span { color: var(--purple); }
+        .top-search {
+            flex: 1;
+            max-width: 650px;
+        }
+        .top-search input {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding: 12px 17px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            appearance: none;
+            background-color: var(--panel);
+            color: var(--text);
+            font: inherit;
+            outline: none;
+        }
+        .top-search input::placeholder { color: var(--muted); }
+        .top-search input:focus {
+            border-color: var(--accent);
+            outline: 2px solid #36d6ae33;
+        }
+        .settings-link,
+        .secondary-button {
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #263244;
+            color: var(--text);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .settings-link:hover,
+        .secondary-button:hover { background: #38465c; }
+        main {
+            width: min(1120px, 100%);
+            margin: 0 auto;
+            padding: 30px 24px 60px;
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            padding: 8px 0 28px;
+        }
+        .avatar {
+            display: grid;
+            width: 104px;
+            height: 104px;
+            flex: 0 0 104px;
+            place-items: center;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple), #347ca5);
+            color: white;
+            font-size: 36px;
+            font-weight: 800;
+        }
+        .profile-info { min-width: 0; flex: 1; }
+        .profile-title-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        h1 { margin: 0; font-size: 27px; overflow-wrap: anywhere; }
+        .handle { margin-top: 3px; color: var(--muted); font-size: 13px; }
+        .bio { margin: 12px 0 0; color: #b7c5d9; line-height: 1.6; }
+        .profile-count {
+            min-width: 120px;
+            padding-left: 22px;
+            border-left: 1px solid var(--border);
+            text-align: center;
+        }
+        .profile-count strong { display: block; font-size: 24px; }
+        .profile-count span {
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .primary-button {
+            padding: 10px 15px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #10151d;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .primary-button:hover { background: #5de5c2; }
+        .section-tabs {
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            padding: 0 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+        }
+        .section-tabs span,
+        .section-tabs button {
+            padding: 14px 0 12px;
+            border: 0;
+            background: none;
+            color: inherit;
+            font: inherit;
+            white-space: nowrap;
+        }
+        .section-tabs button { cursor: pointer; }
+        .section-tabs button:hover { color: var(--text); }
+        .section-tabs .active {
+            border-bottom: 2px solid var(--accent);
+            color: var(--text);
+        }
+        .content-layout {
+            margin-top: 30px;
+        }
+        .reviews-view { margin-top: 30px; }
+        .section-heading {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        h2 { margin: 0; font-size: 19px; }
+        .review-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .review-toolbar h2 {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .review-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .review-filters select {
+            max-width: 180px;
+            padding: 7px 9px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #121923;
+            color: var(--muted);
+            font: inherit;
+            font-size: 12px;
+        }
+        .review-list { max-width: 850px; }
+        .review-entry {
+            display: grid;
+            grid-template-columns: 72px minmax(0, 1fr);
+            gap: 18px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .review-entry-cover {
+            display: block;
+            width: 72px;
+            height: 72px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--panel);
+            object-fit: cover;
+        }
+        .review-album-link {
+            display: block;
+            color: inherit;
+        }
+        .review-album-link:hover .review-entry-title,
+        .favorite-album-link:hover h3 {
+            color: var(--accent);
+        }
+        .review-entry-content { min-width: 0; }
+        .review-entry-title {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 20px;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+        .review-entry-title span {
+            margin-left: 5px;
+            color: var(--muted);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+        }
+        .review-entry-artist {
+            margin: 3px 0 8px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .review-entry-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 9px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .review-entry-rating {
+            color: #58ce68;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+        .review-entry-like {
+            color: #ff9a4d;
+            font-size: 16px;
+        }
+        .review-entry-text {
+            margin: 10px 0 0;
+            color: #b7c5d9;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 15px;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+        }
+        .review-entry-actions { margin-top: 12px; }
+        .review-entry-actions button {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #263244;
+            color: var(--text);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .review-entry-actions button:hover { background: #38465c; }
+        .reviews-empty {
+            padding: 24px 0;
+            color: var(--muted);
+        }
+        .review-editor-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .55);
+        }
+        .review-editor-backdrop[hidden] { display: none; }
+        .review-editor-dialog {
+            width: min(900px, 100%);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--panel);
+        }
+        .review-editor-header,
+        .review-editor-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .review-editor-header h2 {
+            margin: 0;
+            color: var(--text);
+        }
+        .review-editor-content {
+            display: grid;
+            grid-template-columns: 180px minmax(0, 1fr);
+            gap: 32px;
+            padding: 32px;
+        }
+        .review-editor-cover {
+            width: 180px;
+            height: 180px;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #121923;
+        }
+        .review-editor-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .review-editor-cover-placeholder {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            color: var(--muted);
+            font-size: 56px;
+        }
+        .review-editor-cover img[hidden],
+        .review-editor-cover-placeholder[hidden] {
+            display: none;
+        }
+        .review-editor-details {
+            display: grid;
+            min-width: 0;
+            gap: 12px;
+        }
+        .review-editor-details h3 {
+            margin: 0;
+            font-size: 26px;
+            overflow-wrap: anywhere;
+        }
+        .review-editor-details > p {
+            margin: 0;
+            color: var(--muted);
+        }
+        .review-editor-details label {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 650;
+        }
+        .review-editor-dialog input[type="date"],
+        .review-editor-dialog textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #121923;
+            color: var(--text);
+            color-scheme: dark;
+            font: inherit;
+        }
+        .review-editor-dialog input[type="date"] { accent-color: var(--accent); }
+        .review-editor-dialog textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+        .review-editor-dialog input:focus,
+        .review-editor-dialog textarea:focus {
+            border-color: var(--accent);
+            outline: 2px solid #36d6ae33;
+        }
+        .review-editor-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+        }
+        .review-editor-rating > span,
+        .review-editor-like > span {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .review-editor-stars {
+            position: relative;
+            display: flex;
+            gap: 2px;
+        }
+        .review-editor-stars button,
+        #reviewEditorHeart {
+            border: 0;
+            background: none;
+            color: #536176;
+            font-size: 38px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .review-editor-stars button:not(.clear-rating) {
+            background-image: linear-gradient(
+                90deg,
+                var(--accent) var(--star-fill, 0%),
+                #536176 var(--star-fill, 0%)
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .review-editor-stars .clear-rating {
+            position: absolute;
+            right: calc(100% + 8px);
+            top: 50%;
+            transform: translateY(-50%);
+            display: grid;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            background: #263244;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1;
+        }
+        .review-editor-stars .clear-rating:hover {
+            border-color: var(--accent);
+            background: #38465c;
+            color: var(--text);
+        }
+        .review-editor-stars .clear-rating[hidden] { display: none; }
+        #reviewEditorHeart[aria-pressed="true"] { color: var(--accent); }
+        .review-editor-footer {
+            justify-content: flex-end;
+            border-top: 1px solid var(--border);
+            border-bottom: 0;
+            background: #121923;
+        }
+        .review-editor-footer .status { margin-right: auto; }
+        .review-editor-footer button {
+            padding: 10px 18px;
+            border: 0;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .review-editor-cancel {
+            background: #263244;
+            color: var(--text);
+        }
+        .review-editor-cancel:hover { background: #38465c; }
+        .review-editor-save {
+            border-radius: 24px !important;
+            background: var(--purple);
+            color: white;
+            font-size: 16px;
+        }
+        .review-editor-save:hover { background: #8b70d8; }
+        .error { color: #ff9a9a; }
+        .favorite-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .favorite-card { min-width: 0; }
+        .cover-wrap {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--panel);
+        }
+        .cover {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .empty-cover {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            padding: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+        .favorite-card h3 {
+            margin: 9px 0 3px;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+        .favorite-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        [hidden] { display: none !important; }
+        .picker-close {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #263244;
+            color: var(--text);
+            font-size: 22px;
+            cursor: pointer;
+        }
+        .picker-close:hover { background: #38465c; }
+        label { display: block; margin-bottom: 7px; font-weight: 650; }
+        textarea {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            outline: none;
+            background: #121923;
+            color: var(--text);
+        }
+        textarea { min-height: 92px; resize: vertical; }
+        textarea:focus {
+            border-color: var(--accent);
+            outline: 2px solid #36d6ae33;
+        }
+        .status {
+            margin: 7px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .error { color: #ff9a9a; }
+        @media (max-width: 800px) {
+            .profile-count {
+                display: block;
+                min-width: 100px;
+                padding-left: 12px;
+            }
+        }
+        @media (max-width: 700px) {
+            .top-bar { flex-wrap: wrap; gap: 12px; padding: 12px; }
+            .logo { font-size: 22px; }
+            .top-search { order: 3; flex-basis: 100%; max-width: none; }
+        }
+        @media (max-width: 600px) {
+            main { padding: 20px 14px 40px; }
+            .profile-header { align-items: flex-start; gap: 13px; }
+            .avatar { width: 72px; height: 72px; flex-basis: 72px; font-size: 27px; }
+            h1 { font-size: 22px; }
+            .profile-title-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+            .profile-count { min-width: 82px; padding-left: 8px; }
+            .profile-count strong { font-size: 20px; }
+            .profile-count span { font-size: 9px; letter-spacing: .5px; }
+            .favorite-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+            .section-tabs { gap: 18px; }
+            .review-toolbar { align-items: flex-start; flex-direction: column; }
+            .review-filters { width: 100%; }
+            .review-filters select { flex: 1; min-width: 0; }
+            .review-entry { grid-template-columns: 60px minmax(0, 1fr); gap: 12px; }
+            .review-entry-cover { width: 60px; height: 60px; }
+            .review-entry-title { font-size: 17px; }
+            .review-entry-title span { font-size: 13px; }
+            .review-editor-content {
+                grid-template-columns: 80px minmax(0, 1fr);
+                gap: 16px;
+                padding: 20px 16px;
+            }
+            .review-editor-cover { width: 80px; height: 80px; }
+            .review-editor-details h3 { font-size: 20px; }
+            .review-editor-stars button,
+            #reviewEditorHeart { font-size: 30px; }
+            .review-editor-footer { flex-wrap: wrap; padding: 14px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a class="logo" href="/home"><span>●</span> albumly</a>
+        <form class="top-search" id="profileSearchForm">
+            <input
+                type="search"
+                id="profileSearchInput"
+                placeholder="Search albums or artists..."
+                aria-label="Search albums or artists"
+            >
+        </form>
+        <a href="/Settings_page.html" class="settings-link">⚙ Settings</a>
+    </header>
+
+    <main>
+        <section class="profile-header" aria-labelledby="username">
+            <div class="avatar" id="avatarInitial" aria-hidden="true">A</div>
+            <div class="profile-info">
+                <div class="profile-title-row">
+                    <h1 id="username">Loading profile...</h1>
+                    <a class="primary-button" href="/edit-profile">Edit Profile</a>
+                </div>
+                <div class="handle" id="profileHandle"></div>
+                <p class="bio" id="profileBio"></p>
+            </div>
+            <div class="profile-count">
+                <strong id="albumsListenedCount">0</strong>
+                <span>Albums listened to</span>
+            </div>
+        </section>
+
+        <nav class="section-tabs" aria-label="Profile sections">
+            <button type="button" class="active" data-view="profile">Profile</button>
+            <span>Activity</span>
+            <span>Albums</span>
+            <button type="button" data-view="reviews" id="reviewsTab">Reviews</button>
+            <span>Lists</span>
+            <span>Likes</span>
+        </nav>
+        <p class="status" id="profileStatus" role="status" aria-live="polite"></p>
+
+        <div class="content-layout" id="profileView">
+            <section aria-labelledby="favoritesHeading">
+                <div class="section-heading">
+                    <h2 id="favoritesHeading">Favorite Albums</h2>
+                </div>
+                <div class="favorite-grid" id="favoriteGrid"></div>
+            </section>
+        </div>
+
+        <section class="reviews-view" id="reviewsView" hidden aria-labelledby="reviewsHeading">
+            <div class="review-toolbar">
+                <h2 id="reviewsHeading">Reviews</h2>
+                <div class="review-filters">
+                    <select id="ratingFilter" aria-label="Filter by rating">
+                        <option value="all">All ratings</option>
+                        <option value="rated">Rated</option>
+                        <option value="unrated">Not rated</option>
+                    </select>
+                    <select id="yearFilter" aria-label="Filter by listening year">
+                        <option value="all">All years</option>
+                    </select>
+                    <select id="sortReviews" aria-label="Sort reviews">
+                        <option value="recent">Sort by recent listen</option>
+                        <option value="logged">Sort by recently logged</option>
+                        <option value="rating">Sort by rating</option>
+                        <option value="title">Sort by album title</option>
+                    </select>
+                </div>
+            </div>
+            <p class="status" id="reviewsStatus" role="status" aria-live="polite"></p>
+            <div class="review-list" id="reviewList"></div>
+        </section>
+
+        <div class="review-editor-backdrop" id="reviewEditorBackdrop" hidden>
+            <section class="review-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="reviewEditorTitle">
+                <header class="review-editor-header">
+                    <h2 id="reviewEditorTitle">Edit review</h2>
+                    <button class="picker-close" type="button" id="closeReviewEditor" aria-label="Close review editor">&times;</button>
+                </header>
+                <form id="reviewEditorForm">
+                    <div class="review-editor-content">
+                        <div class="review-editor-cover">
+                            <img id="reviewEditorCover" alt="" hidden>
+                            <span class="review-editor-cover-placeholder" id="reviewEditorCoverPlaceholder" aria-hidden="true">♪</span>
+                        </div>
+                        <div class="review-editor-details">
+                            <h3 id="reviewEditorAlbum">Album title</h3>
+                            <p id="reviewEditorArtist"></p>
+                            <p id="reviewEditorYear"></p>
+                            <label for="reviewEditorDate">Listened on</label>
+                            <input type="date" id="reviewEditorDate">
+                            <label for="reviewEditorText">Review (optional)</label>
+                            <textarea id="reviewEditorText" maxlength="5000" placeholder="Add a review"></textarea>
+                            <div class="review-editor-options">
+                                <div class="review-editor-rating">
+                                    <span>Rating</span>
+                                    <div class="review-editor-stars" role="group" aria-label="Select rating">
+                                        <button type="button" class="clear-rating" id="clearReviewEditorRating" aria-label="Clear rating" hidden>×</button>
+                                        <button type="button" data-rating="1" aria-label="1 star">★</button>
+                                        <button type="button" data-rating="2" aria-label="2 stars">★</button>
+                                        <button type="button" data-rating="3" aria-label="3 stars">★</button>
+                                        <button type="button" data-rating="4" aria-label="4 stars">★</button>
+                                        <button type="button" data-rating="5" aria-label="5 stars">★</button>
+                                    </div>
+                                </div>
+                                <div class="review-editor-like">
+                                    <span>Like</span>
+                                    <button type="button" id="reviewEditorHeart" aria-label="Like this album" aria-pressed="false">♥</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="review-editor-footer">
+                        <p class="status" id="reviewEditorStatus" role="status" aria-live="polite"></p>
+                        <button class="review-editor-cancel" type="button" id="cancelReviewEditor">Cancel</button>
+                        <button class="review-editor-save" type="submit" id="saveReviewEdit">Save</button>
+                    </footer>
+                </form>
+            </section>
+        </div>
+
+    </main>
+
+    <script>
+        const favoriteGrid = document.getElementById("favoriteGrid");
+        const reviewList = document.getElementById("reviewList");
+        const reviewEditorBackdrop = document.getElementById("reviewEditorBackdrop");
+        let savedReviews = [];
+        let editingReview = null;
+        let editingRating = 0;
+        let reviewEditTrigger = null;
+        const profile = {
+            username: "",
+            bio: "",
+            albumsListened: 0,
+            favorites: [null, null, null, null]
+        };
+        function setStatus(element, message, isError = false) {
+            element.textContent = message;
+            element.classList.toggle("error", isError);
+        }
+
+        function formatRating(rating) {
+            if (!rating) return "Not rated";
+            const fullStars = Math.floor(rating);
+            const halfStar = rating % 1 >= 0.5;
+            return "★".repeat(fullStars) + (halfStar ? "½" : "");
+        }
+
+        function formatListenedDate(value) {
+            if (!value) return "Listening date not set";
+            const date = new Date(value + "T00:00:00");
+            if (Number.isNaN(date.getTime())) return "Listening date not set";
+            return "Listened " + date.toLocaleDateString(undefined, {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+        }
+
+        function openAlbumPage(album) {
+            sessionStorage.setItem("selectedAlbum", JSON.stringify({
+                id: album.spotify_id || album.id,
+                title: album.title,
+                artist: album.artist,
+                release_year: album.release_year || "",
+                album_cover_url: album.album_cover_url || null
+            }));
+            window.location.href = "/Album_page.html";
+        }
+
+        function openReviewEditor(review, trigger) {
+            editingReview = review;
+            reviewEditTrigger = trigger;
+            document.getElementById("reviewEditorAlbum").textContent = review.title;
+            document.getElementById("reviewEditorArtist").textContent = review.artist;
+            document.getElementById("reviewEditorYear").textContent =
+                review.release_year || "Release year unavailable";
+            const cover = document.getElementById("reviewEditorCover");
+            const coverPlaceholder = document.getElementById("reviewEditorCoverPlaceholder");
+            if (review.album_cover_url) {
+                cover.src = review.album_cover_url;
+                cover.alt = review.title + " album cover";
+                cover.hidden = false;
+                coverPlaceholder.hidden = true;
+            } else {
+                cover.removeAttribute("src");
+                cover.alt = "";
+                cover.hidden = true;
+                coverPlaceholder.hidden = false;
+            }
+            document.getElementById("reviewEditorDate").value =
+                review.listened_at || "";
+            document.getElementById("reviewEditorDate").max =
+                new Date().toISOString().slice(0, 10);
+            document.getElementById("reviewEditorText").value =
+                review.review || "";
+            document.getElementById("reviewEditorStatus").textContent = "";
+            updateReviewEditorRating(Number(review.rating) || 0);
+            document.getElementById("reviewEditorHeart")
+                .setAttribute("aria-pressed", String(Boolean(review.liked)));
+            reviewEditorBackdrop.hidden = false;
+            document.getElementById("closeReviewEditor").focus();
+        }
+
+        function updateReviewEditorRating(rating) {
+            editingRating = rating;
+            document.getElementById("clearReviewEditorRating").hidden = rating === 0;
+            document.querySelectorAll(".review-editor-stars button[data-rating]")
+                .forEach(button => {
+                    const star = Number(button.dataset.rating);
+                    const fill = rating >= star ? 100 : rating >= star - 0.5 ? 50 : 0;
+                    button.style.setProperty("--star-fill", fill + "%");
+                    button.setAttribute("aria-pressed", String(fill > 0));
+                });
+        }
+
+        function closeReviewEditor(restoreFocus = true) {
+            reviewEditorBackdrop.hidden = true;
+            editingReview = null;
+            if (restoreFocus && reviewEditTrigger) {
+                reviewEditTrigger.focus();
+            }
+            reviewEditTrigger = null;
+        }
+
+        function renderReviews() {
+            const ratingFilter = document.getElementById("ratingFilter").value;
+            const yearFilter = document.getElementById("yearFilter").value;
+            const sortOrder = document.getElementById("sortReviews").value;
+            let reviews = savedReviews.filter(review => {
+                const hasRating = Number(review.rating) > 0;
+                const matchesRating = ratingFilter === "all" ||
+                    (ratingFilter === "rated" && hasRating) ||
+                    (ratingFilter === "unrated" && !hasRating);
+                const year = review.listened_at
+                    ? review.listened_at.slice(0, 4)
+                    : "";
+                return matchesRating &&
+                    (yearFilter === "all" || year === yearFilter);
+            });
+
+            reviews = reviews.slice();
+            if (sortOrder === "rating") {
+                reviews.sort((a, b) => b.rating - a.rating ||
+                    (b.listened_at || "").localeCompare(a.listened_at || ""));
+            } else if (sortOrder === "title") {
+                reviews.sort((a, b) => a.title.localeCompare(b.title));
+            } else if (sortOrder === "logged") {
+                reviews.sort((a, b) =>
+                    (b.created_at || "").localeCompare(a.created_at || "")
+                );
+            } else {
+                reviews.sort((a, b) =>
+                    (b.listened_at || "").localeCompare(a.listened_at || "")
+                );
+            }
+
+            reviewList.replaceChildren();
+            if (!reviews.length) {
+                const empty = document.createElement("p");
+                empty.className = "reviews-empty";
+                empty.textContent = savedReviews.length
+                    ? "No reviews match these filters."
+                    : "No saved reviews yet. Write a review from album search to see it here.";
+                reviewList.appendChild(empty);
+                return;
+            }
+
+            reviews.forEach(review => {
+                const entry = document.createElement("article");
+                entry.className = "review-entry";
+                const albumLink = document.createElement("a");
+                albumLink.className = "review-album-link";
+                albumLink.href = "/Album_page.html";
+                albumLink.setAttribute("aria-label", "Open " + review.title);
+                albumLink.addEventListener("click", event => {
+                    event.preventDefault();
+                    openAlbumPage(review);
+                });
+                const cover = document.createElement(review.album_cover_url ? "img" : "div");
+                cover.className = "review-entry-cover";
+                if (review.album_cover_url) {
+                    cover.alt = review.title + " album cover";
+                    cover.src = review.album_cover_url;
+                    cover.loading = "lazy";
+                } else {
+                    cover.setAttribute("aria-hidden", "true");
+                }
+                albumLink.appendChild(cover);
+
+                const content = document.createElement("div");
+                content.className = "review-entry-content";
+                const titleLink = document.createElement("a");
+                titleLink.className = "review-album-link";
+                titleLink.href = "/Album_page.html";
+                titleLink.addEventListener("click", event => {
+                    event.preventDefault();
+                    openAlbumPage(review);
+                });
+                const title = document.createElement("h3");
+                title.className = "review-entry-title";
+                title.append(document.createTextNode(review.title));
+                if (review.release_year) {
+                    title.append(document.createTextNode(" "));
+                    const year = document.createElement("span");
+                    year.textContent = review.release_year;
+                    title.appendChild(year);
+                }
+                titleLink.appendChild(title);
+
+                const artist = document.createElement("p");
+                artist.className = "review-entry-artist";
+                artist.textContent = review.artist;
+
+                const meta = document.createElement("div");
+                meta.className = "review-entry-meta";
+                if (Number(review.rating) > 0) {
+                    const rating = document.createElement("span");
+                    rating.className = "review-entry-rating";
+                    rating.textContent = formatRating(Number(review.rating));
+                    rating.setAttribute("aria-label", "Rated " + Number(review.rating) + " out of 5");
+                    meta.appendChild(rating);
+                }
+                if (review.liked) {
+                    const like = document.createElement("span");
+                    like.className = "review-entry-like";
+                    like.textContent = "♥";
+                    like.setAttribute("aria-label", "Liked");
+                    meta.appendChild(like);
+                }
+                if (review.listened_at) {
+                    const listened = document.createElement("span");
+                    listened.textContent = formatListenedDate(review.listened_at);
+                    meta.appendChild(listened);
+                }
+
+                const actions = document.createElement("div");
+                actions.className = "review-entry-actions";
+                const editButton = document.createElement("button");
+                editButton.type = "button";
+                editButton.textContent = "Edit review";
+                editButton.addEventListener("click", event =>
+                    openReviewEditor(review, event.currentTarget)
+                );
+                actions.appendChild(editButton);
+                content.append(titleLink, artist);
+                if (meta.childElementCount > 0) {
+                    content.appendChild(meta);
+                }
+                if (review.review) {
+                    const text = document.createElement("p");
+                    text.className = "review-entry-text";
+                    text.textContent = review.review;
+                    content.appendChild(text);
+                }
+                content.appendChild(actions);
+                entry.append(albumLink, content);
+                reviewList.appendChild(entry);
+            });
+        }
+
+        async function loadReviews() {
+            const status = document.getElementById("reviewsStatus");
+            setStatus(status, "Loading reviews...");
+            try {
+                const response = await fetch("/api/reviews?mine=1", {
+                    headers: { "Accept": "application/json" }
+                });
+                if (response.status === 401) {
+                    window.location.replace("/login-page");
+                    return;
+                }
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not load reviews.");
+                }
+                if (!Array.isArray(data.reviews)) {
+                    throw new Error("The server returned an invalid reviews list.");
+                }
+                savedReviews = data.reviews;
+                const years = [...new Set(savedReviews
+                    .map(review => review.listened_at
+                        ? review.listened_at.slice(0, 4)
+                        : "")
+                    .filter(Boolean))]
+                    .sort((a, b) => b.localeCompare(a));
+                const yearFilter = document.getElementById("yearFilter");
+                const selectedYear = yearFilter.value;
+                yearFilter.replaceChildren(new Option("All years", "all"));
+                years.forEach(year => yearFilter.add(new Option(year, year)));
+                if (years.includes(selectedYear)) {
+                    yearFilter.value = selectedYear;
+                }
+                setStatus(status, savedReviews.length
+                    ? savedReviews.length + (savedReviews.length === 1
+                        ? " album reviewed"
+                        : " albums reviewed")
+                    : "");
+                renderReviews();
+            } catch (error) {
+                setStatus(status, error.message, true);
+                reviewList.replaceChildren();
+            }
+        }
+
+        function showView(view) {
+            const showReviews = view === "reviews";
+            document.getElementById("profileView").hidden = showReviews;
+            document.getElementById("reviewsView").hidden = !showReviews;
+            document.querySelectorAll(".section-tabs button[data-view]").forEach(button => {
+                const isActive = button.dataset.view === view;
+                button.classList.toggle("active", isActive);
+                button.setAttribute("aria-pressed", String(isActive));
+            });
+            if (showReviews) {
+                loadReviews();
+            }
+        }
+
+        function renderFavorites() {
+            favoriteGrid.replaceChildren();
+            profile.favorites.forEach((album, index) => {
+                const card = document.createElement("article");
+                card.className = "favorite-card";
+
+                const coverWrap = document.createElement("div");
+                coverWrap.className = "cover-wrap";
+                const albumLink = document.createElement("a");
+                albumLink.className = "favorite-album-link";
+                if (album) {
+                    albumLink.href = "/Album_page.html";
+                    albumLink.addEventListener("click", event => {
+                        event.preventDefault();
+                        openAlbumPage(album);
+                    });
+                }
+                if (album && album.album_cover_url) {
+                    const image = document.createElement("img");
+                    image.className = "cover";
+                    image.src = album.album_cover_url;
+                    image.alt = album.title + " album cover";
+                    image.loading = "lazy";
+                    albumLink.appendChild(image);
+                } else {
+                    const placeholder = document.createElement("div");
+                    placeholder.className = "empty-cover";
+                    placeholder.textContent = "Favorite " + (index + 1);
+                    albumLink.appendChild(placeholder);
+                }
+                coverWrap.appendChild(albumLink);
+
+                const title = document.createElement("h3");
+                title.textContent = album ? album.title : "Empty slot";
+                const artist = document.createElement("p");
+                artist.textContent = album
+                    ? album.artist + (album.release_year ? " · " + album.release_year : "")
+                    : "Choose an album to feature";
+                const titleLink = document.createElement("a");
+                titleLink.className = "favorite-album-link";
+                titleLink.textContent = title.textContent;
+                if (album) {
+                    titleLink.href = "/Album_page.html";
+                    titleLink.addEventListener("click", event => {
+                        event.preventDefault();
+                        openAlbumPage(album);
+                    });
+                }
+                title.replaceChildren(titleLink);
+
+                card.append(coverWrap, title, artist);
+                favoriteGrid.appendChild(card);
+            });
+        }
+
+        function showProfile() {
+            document.getElementById("username").textContent = profile.username;
+            document.getElementById("profileHandle").textContent = "@" + profile.username;
+            document.getElementById("avatarInitial").textContent =
+                profile.username.trim().charAt(0).toUpperCase() || "?";
+            document.getElementById("profileBio").textContent =
+                profile.bio || "Add a short bio to tell people about your music taste.";
+            document.getElementById("albumsListenedCount").textContent =
+                profile.albumsListened;
+            renderFavorites();
+        }
+
+        async function loadProfile() {
+            try {
+                const response = await fetch("/api/profile", {
+                    headers: { "Accept": "application/json" }
+                });
+                if (response.status === 401) {
+                    window.location.replace("/login-page");
+                    return;
+                }
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not load profile.");
+                }
+                profile.username = data.username;
+                profile.bio = data.bio;
+                profile.albumsListened = data.albums_listened;
+                profile.favorites = [null, null, null, null];
+                data.favorites.forEach(album => {
+                    if (album.slot >= 1 && album.slot <= 4) {
+                        profile.favorites[album.slot - 1] = album;
+                    }
+                });
+                showProfile();
+            } catch (error) {
+                document.getElementById("username").textContent = "Profile unavailable";
+                setStatus(document.getElementById("profileStatus"), error.message, true);
+            }
+        }
+
+        document.getElementById("profileSearchForm").addEventListener("submit", event => {
+            event.preventDefault();
+            const query = document.getElementById("profileSearchInput").value.trim();
+            if (query) {
+                window.location.href = "/Search_page.html?q=" + encodeURIComponent(query);
+            }
+        });
+
+        document.querySelectorAll(".section-tabs button[data-view]").forEach(button => {
+            button.addEventListener("click", () => showView(button.dataset.view));
+        });
+        ["ratingFilter", "yearFilter", "sortReviews"].forEach(id => {
+            document.getElementById(id).addEventListener("change", renderReviews);
+        });
+
+        document.querySelectorAll(".review-editor-stars button[data-rating]")
+            .forEach(button => {
+                button.addEventListener("click", () => {
+                    const rating = Number(button.dataset.rating);
+                    updateReviewEditorRating(
+                        editingRating === rating ? rating - 0.5 : rating
+                    );
+                });
+            });
+        document.getElementById("clearReviewEditorRating").addEventListener("click", () =>
+            updateReviewEditorRating(0)
+        );
+        document.getElementById("reviewEditorHeart").addEventListener("click", event => {
+            const heart = event.currentTarget;
+            heart.setAttribute(
+                "aria-pressed",
+                String(heart.getAttribute("aria-pressed") !== "true")
+            );
+        });
+
+        document.getElementById("reviewEditorForm").addEventListener("submit", async event => {
+            event.preventDefault();
+            if (!editingReview) return;
+
+            const saveButton = document.getElementById("saveReviewEdit");
+            const status = document.getElementById("reviewEditorStatus");
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving...";
+            setStatus(status, "Saving changes...");
+            try {
+                const response = await fetch("/api/reviews", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        spotify_album_id: editingReview.spotify_id,
+                        album_name: editingReview.title,
+                        artist_name: editingReview.artist,
+                        release_year: editingReview.release_year || "",
+                        cover_url: editingReview.album_cover_url || null,
+                        rating: editingRating || null,
+                        body: document.getElementById("reviewEditorText").value,
+                        listened_on: document.getElementById("reviewEditorDate").value || null,
+                        liked: document.getElementById("reviewEditorHeart")
+                            .getAttribute("aria-pressed") === "true"
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not save review changes.");
+                }
+                setStatus(status, "Review updated.");
+                await loadReviews();
+                closeReviewEditor();
+            } catch (error) {
+                setStatus(status, error.message, true);
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = "Save";
+            }
+        });
+
+        document.getElementById("closeReviewEditor").addEventListener("click", () =>
+            closeReviewEditor()
+        );
+        document.getElementById("cancelReviewEditor").addEventListener("click", () =>
+            closeReviewEditor()
+        );
+        reviewEditorBackdrop.addEventListener("click", event => {
+            if (event.target === reviewEditorBackdrop) {
+                closeReviewEditor();
+            }
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && !reviewEditorBackdrop.hidden) {
+                closeReviewEditor();
+            }
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>

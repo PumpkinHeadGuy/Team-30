@@ -36,17 +36,28 @@ header {
 }
 .logo { font-size: 26px; font-weight: 800; white-space: nowrap; }
 .logo span { color: var(--purple); }
-.search {
+.top-search {
     flex: 1;
     max-width: 650px;
+}
+.search {
+    display: block;
+    width: 100%;
+    min-width: 0;
     padding: 12px 17px;
     border-radius: 24px;
-    background: var(--panel);
     border: 1px solid var(--border);
+    appearance: none;
+    background-color: var(--panel);
     color: var(--text);
+    font: inherit;
     outline: none;
 }
-.username { margin-left: auto; color: var(--muted); }
+.search::placeholder { color: var(--muted); }
+.search:focus {
+    border-color: var(--accent);
+    outline: 2px solid #36d6ae33;
+}
 .layout {
     display: grid;
     grid-template-columns: 205px minmax(0, 1fr) 275px;
@@ -133,6 +144,25 @@ h2 { font-size: 20px; margin: 0; }
     background: #121923;
 }
 .profile-name { font-size: 19px; font-weight: 700; }
+.profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border-radius: 7px;
+}
+.profile-identity:hover .profile-name { color: var(--accent); }
+.profile-avatar {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #347ca5);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+}
 .handle { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .stats { display: flex; justify-content: space-between; margin-top: 22px; text-align: center; }
 .stats strong { display: block; font-size: 19px; }
@@ -166,7 +196,7 @@ h2 { font-size: 20px; margin: 0; }
 @media (max-width: 700px) {
     header { padding: 12px; gap: 12px; flex-wrap: wrap; height: auto; }
     .logo { font-size: 22px; }
-    .search { order: 3; flex-basis: 100%; }
+    .top-search { order: 3; flex-basis: 100%; max-width: none; }
     .layout { display: block; padding: 17px; }
     .sidebar { display: flex; overflow-x: auto; gap: 5px; margin-bottom: 24px; }
     .sidebar a { white-space: nowrap; }
@@ -192,15 +222,15 @@ h2 { font-size: 20px; margin: 0; }
 
 <header>
     <a class="logo" href="/home"><span>●</span> albumly</a>
-    <input class="search" id="search" placeholder="Search albums or artists...">
+    <form class="top-search" id="homeSearchForm">
+        <input class="search" id="search" type="search" placeholder="Search albums or artists..." aria-label="Search albums or artists..." required>
+    </form>
     <a class="settings-link" href="/Settings_page.html">⚙ Settings</a>
-    <div class="username">{{username}}</div>
 </header>
 
 <div class="layout">
     <nav class="sidebar">
         <a class="active" href="/home">⌂ &nbsp; Home</a>
-        <a href="/Search_page.html">⌕ &nbsp; Search Albums</a>
         <a href="/Settings_page.html">⚙ &nbsp; Settings</a>
         <a href="#discover">◎ &nbsp; Discover</a>
         <a href="#albums">♫ &nbsp; Albums</a>
@@ -269,10 +299,15 @@ h2 { font-size: 20px; margin: 0; }
 
     <aside class="right-sidebar">
         <div class="profile">
-            <div class="profile-name">{{username}}</div>
-            <div class="handle">@{{username}}</div>
+            <a class="profile-identity" href="/profile">
+                <span class="profile-avatar" data-username="{{username}}" aria-hidden="true"></span>
+                <span>
+                    <span class="profile-name">{{username}}</span>
+                    <span class="handle">@{{username}}</span>
+                </span>
+            </a>
             <div class="stats">
-                <div><strong>0</strong><span>Reviews</span></div>
+                <div><strong id="homeReviewsCount">0</strong><span>Reviews</span></div>
                 <div><strong>0</strong><span>Following</span></div>
                 <div><strong>0</strong><span>Followers</span></div>
             </div>
@@ -379,9 +414,26 @@ function renderAlbums(albums, grid) {
 
 const search = document.getElementById("search");
 
-search.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        loadAlbums(search.value.trim() || "popular");
+document.querySelectorAll(".profile-avatar").forEach(avatar => {
+    avatar.textContent = avatar.dataset.username.trim().charAt(0).toUpperCase() || "?";
+});
+
+fetch("/api/profile", { headers: { "Accept": "application/json" } })
+    .then(response => {
+        if (!response.ok) throw new Error("Could not load profile statistics.");
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById("homeReviewsCount").textContent =
+            String(data.albums_listened);
+    })
+    .catch(error => console.error(error));
+
+document.getElementById("homeSearchForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const query = search.value.trim();
+    if (query) {
+        window.location.href = "/Search_page.html?q=" + encodeURIComponent(query);
     }
 });
 

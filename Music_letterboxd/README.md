@@ -41,19 +41,20 @@ Open [http://127.0.0.1:8080](http://127.0.0.1:8080) in a browser. Keep the serve
 ## Test the app
 
 1. Create an account or log in.
-2. Enter an album or artist, such as `Radiohead`.
-3. Select **Search**.
-4. Confirm that album covers, titles, artists, release years, and Spotify links appear.
-5. Log out and confirm the next login starts with an empty search page.
+2. Enter an album or artist, such as `Radiohead`, and press **Enter** to search.
+3. Confirm that album covers, titles, artists, release years, and Spotify links appear.
+4. Log out and confirm the next login starts with an empty search page.
 
 ## Project behavior
 
 - The original login and account creation page is preserved.
 - Successful login or registration opens the album search page.
+- Signed-in users can open their profile from the Home profile card, edit their bio and four favorite albums on a separate page, and view/edit their saved reviews.
 - Logout returns to the login page.
 - Searches return up to nine Spotify albums.
 - Spotify credentials stay on the server.
 - Local `.env`, database, and Python cache files are excluded from Git.
+- The server creates the `profiles` and `favorite_albums` tables in Supabase at startup if they do not already exist. Existing accounts and reviews are stored in the shared Supabase database.
 
 ## Troubleshooting
 
