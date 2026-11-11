@@ -295,7 +295,7 @@
 
 <body>
     <header>
-        <a class="logo" href="/home.html"><span>●</span> albumly</a>
+        <a class="logo" href="/home"><span>●</span> albumly</a>
         <h1 class="page-title">Settings</h1>
         <div class="username">{{username}}</div>
     </header>
@@ -305,7 +305,7 @@
             <h2>Menu</h2>
 
             <img
-                src="Images/default-icon.png"
+                src="/Images/default-icon.png"
                 alt="Profile Picture"
                 class="profile-image"
             >
@@ -365,6 +365,7 @@
                         Save Changes
                     </button>
                 </form>
+                <p id="account-status" role="status" style="margin:14px 0 0;min-height:20px"></p>
             </section>
 
             <section id="deletion" class="tab-content">
@@ -416,6 +417,7 @@
     <script>
         const tabButtons = document.querySelectorAll(".tab-button");
         const tabContents = document.querySelectorAll(".tab-content");
+        const accountStatus = document.getElementById("account-status");
 
         tabButtons.forEach(button => {
             button.addEventListener("click", () => {
@@ -427,28 +429,89 @@
             });
         });
 
-        document.getElementById("account-form").addEventListener("submit", event => {
-            event.preventDefault();
-            alert("Connect this form to your account-saving system.");
-        });
+        function setStatus(message, isError) {
+            accountStatus.textContent = message;
+            accountStatus.style.color = isError ? "#e5675a" : "#7bd88f";
+        }
 
-        document.getElementById("delete-account").addEventListener("click", () => {
-            if (confirm("Are you sure you want to delete your account?")) {
-                alert("Connect this to your account deletion system.");
+        async function api(url, options) {
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                window.location.replace("/login-page");
+                throw new Error("Please sign in again.");
+            }
+            let data = {};
+            try { data = await response.json(); } catch (e) { /* no JSON body */ }
+            if (!response.ok) {
+                throw new Error(data.error || "Something went wrong. Please try again.");
+            }
+            return data;
+        }
+
+        function postJson(url, payload) {
+            return api(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                body: JSON.stringify(payload || {})
+            });
+        }
+
+        async function loadAccount() {
+            try {
+                const account = await api("/api/account", { headers: { "Accept": "application/json" } });
+                document.getElementById("username-input").value = account.username || "";
+                document.getElementById("email-input").value = account.email || "";
+            } catch (error) {
+                setStatus(error.message, true);
+            }
+        }
+
+        document.getElementById("account-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            setStatus("Saving...", false);
+            try {
+                const result = await postJson("/api/account", {
+                    username: document.getElementById("username-input").value,
+                    email: document.getElementById("email-input").value
+                });
+                document.querySelector(".username").textContent = result.username;
+                setStatus("Changes saved.", false);
+            } catch (error) {
+                setStatus(error.message, true);
             }
         });
 
-        document.getElementById("logout-button").addEventListener("click", async() => { 
-            window.location.href = "index.html"; 
+        document.getElementById("delete-account").addEventListener("click", async () => {
+            if (!confirm("Are you sure you want to delete your account? This cannot be undone.")) {
+                return;
+            }
+            try {
+                await postJson("/api/account/delete");
+                window.location.replace("/login-page");
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        document.getElementById("logout-button").addEventListener("click", async () => {
+            try {
+                await fetch("/logout", { method: "POST" });
+            } catch (error) {
+                alert("Could not reach the server to log out.");
+                return;
+            }
+            window.location.replace("/login-page");
         });
 
         document.getElementById("back-button").addEventListener("click", () => {
             if (window.history.length > 1) {
                 window.history.back();
             } else {
-                window.location.href = "index.html";
+                window.location.href = "/home";
             }
         });
+
+        loadAccount();
     </script>
 </body>
 </html>

@@ -301,14 +301,15 @@ h2 { font-size: 20px; margin: 0; }
 <div class="layout">
     <nav class="sidebar">
         <a class="active" href="/home">⌂ &nbsp; Home</a>
+        <a href="/Search_page.html">⌕ &nbsp; Search Albums</a>
         <a href="/Settings_page.html">⚙ &nbsp; Settings</a>
-        <a href="#discover">◎ &nbsp; Discover</a>
+        <a href="/discover">◎ &nbsp; Discover</a>
         <a href="#albums">♫ &nbsp; Albums</a>
         <a href="#reviews">▤ &nbsp; Reviews</a>
         <a href="#lists">☷ &nbsp; Lists</a>
         <h4>YOUR LIBRARY</h4>
         <a href="#liked">♡ &nbsp; Liked Albums</a>
-        <a href="#reviews">▧ &nbsp; Your Reviews</a>
+        <a href="/profile">▧ &nbsp; Your Reviews</a>
         <a href="#watchlist">♧ &nbsp; Watchlist</a>
         <button class="logout" onclick="logout()">Log out</button>
     </nav>
@@ -320,7 +321,7 @@ h2 { font-size: 20px; margin: 0; }
         <section class="section" id="discover">
             <div class="section-heading">
                 <h2>Featured Albums</h2>
-                <a class="see-all" href="#albums">Explore →</a>
+                <a class="see-all" href="/Search_page.html">Explore →</a>
             </div>
             <div class="albums" id="albumGrid"></div>
         </section>
@@ -329,33 +330,7 @@ h2 { font-size: 20px; margin: 0; }
             <div class="section-heading">
                 <h2>Recent Reviews</h2>
             </div>
-            <div class="review">
-                <div class="avatar">S</div>
-                <div>
-                    <div class="review-meta"><strong>sarah</strong> reviewed an album</div>
-                    <strong>After Hours</strong>
-                    <div class="rating">★★★★★</div>
-                    <p>A dark, atmospheric album that gets better with every listen.</p>
-                </div>
-            </div>
-            <div class="review">
-                <div class="avatar">M</div>
-                <div>
-                    <div class="review-meta"><strong>mike</strong> reviewed an album</div>
-                    <strong>Blonde</strong>
-                    <div class="rating">★★★★★</div>
-                    <p>Beautiful production and songwriting that sticks with you.</p>
-                </div>
-            </div>
-            <div class="review">
-                <div class="avatar">E</div>
-                <div>
-                    <div class="review-meta"><strong>emily</strong> reviewed an album</div>
-                    <strong>IGOR</strong>
-                    <div class="rating">★★★★☆</div>
-                    <p>An incredible project with a sound all its own.</p>
-                </div>
-            </div>
+            <div id="recentReviews"><p class="subtitle">Loading reviews...</p></div>
         </section>
 
         <section class="section" id="albums">
@@ -622,7 +597,90 @@ async function logout() {
     }
 }
 
+function starText(rating) {
+    const value = Number(rating) || 0;
+    const full = Math.floor(value);
+    const half = value % 1 >= 0.5 ? 1 : 0;
+    return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(Math.max(0, 5 - full - half));
+}
+
+async function loadRecentReviews() {
+    const box = document.getElementById("recentReviews");
+    try {
+        const response = await fetch("/api/reviews", { headers: { "Accept": "application/json" } });
+        if (!response.ok) throw new Error("Could not load reviews");
+        const data = await response.json();
+        const reviews = (data.reviews || []).filter(r => r.body || r.rating).slice(0, 5);
+        box.replaceChildren();
+
+        if (!reviews.length) {
+            const empty = document.createElement("p");
+            empty.className = "subtitle";
+            empty.append("No reviews yet. ");
+            const link = document.createElement("a");
+            link.href = "/Search_page.html";
+            link.className = "see-all";
+            link.textContent = "Search for an album and write the first one →";
+            empty.appendChild(link);
+            box.appendChild(empty);
+            return;
+        }
+
+        reviews.forEach(r => {
+            const item = document.createElement("div");
+            item.className = "review";
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.textContent = (r.username || "?").charAt(0).toUpperCase();
+
+            const content = document.createElement("div");
+
+            const meta = document.createElement("div");
+            meta.className = "review-meta";
+            const who = document.createElement("strong");
+            who.textContent = r.username;
+            meta.append(who, " reviewed an album");
+
+            const albumLink = document.createElement("a");
+            albumLink.href = "/Album_page.html";
+            const albumName = document.createElement("strong");
+            albumName.textContent = r.album_name;
+            albumLink.appendChild(albumName);
+            albumLink.addEventListener("click", () => {
+                sessionStorage.setItem("selectedAlbum", JSON.stringify({
+                    id: r.album_id,
+                    title: r.album_name,
+                    artist: r.artist_name || "Unknown artist",
+                    release_year: r.release_year || "",
+                    album_cover_url: r.cover_url || null
+                }));
+            });
+
+            content.append(meta, albumLink);
+
+            if (r.rating) {
+                const rating = document.createElement("div");
+                rating.className = "rating";
+                rating.textContent = starText(r.rating);
+                content.appendChild(rating);
+            }
+            if (r.body) {
+                const text = document.createElement("p");
+                text.textContent = r.body;
+                content.appendChild(text);
+            }
+
+            item.append(avatar, content);
+            box.appendChild(item);
+        });
+    } catch (error) {
+        box.textContent = "Could not load reviews.";
+    }
+}
+
 loadAlbums();
+loadRecentReviews();
 </script>
 </body>
 </html>

@@ -828,7 +828,7 @@
             <a href="/home">⌂ &nbsp; Home</a>
             <a href="/Search_page.html">⌕ &nbsp; Search Albums</a>
             <a href="/Settings_page.html">⚙ &nbsp; Settings</a>
-            <a href="/home#discover">◎ &nbsp; Discover</a>
+            <a href="/discover">◎ &nbsp; Discover</a>
             <a href="/home#albums">♫ &nbsp; Albums</a>
             <a class="active" href="#reviews">▤ &nbsp; Reviews</a>
             <a href="/home#lists">☷ &nbsp; Lists</a>
@@ -1481,7 +1481,6 @@
                     cover_url: currentAlbum.album_cover_url || null,
                     rating: selectedRating,
                     body: reviewContentText,
-                    liked: false,
                     listened_on: new Date().toISOString().split('T')[0]
                 })
             });
@@ -1515,9 +1514,9 @@
 
         reviews.forEach(review => {
             const rating = Number(review.dataset.rating);
-            if (rating >= 1 && rating <= 5) {
+            if (rating >= 0.5 && rating <= 5) {
                 total += rating;
-                breakdown[rating]++;
+                breakdown[Math.ceil(rating)]++;
             }
         });
 

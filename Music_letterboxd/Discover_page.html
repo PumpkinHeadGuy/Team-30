@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team 30 - Discover</title>
+<style>
+* { box-sizing: border-box; }
+:root {
+    --bg: #10151d;
+    --panel: #171f2b;
+    --border: #293443;
+    --text: #edf2fc;
+    --muted: #9baec8;
+    --accent: #36d6ae;
+    --purple: #a78bfa;
+}
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+a { color: inherit; text-decoration: none; }
+a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+header {
+    height: 68px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 0 25px;
+    border-bottom: 1px solid var(--border);
+    background: #111720;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.logo { font-size: 26px; font-weight: 800; white-space: nowrap; }
+.logo span { color: var(--purple); }
+.header-username { margin-left: auto; color: var(--muted); font-weight: 500; }
+.settings-link {
+    color: var(--text);
+    background: #263244;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    white-space: nowrap;
+    font-size: 13px;
+}
+.settings-link:hover { background: #38465c; }
+
+.layout {
+    display: grid;
+    grid-template-columns: 205px minmax(0, 1fr);
+    gap: 25px;
+    max-width: 1200px;
+    margin: auto;
+    padding: 24px;
+}
+.sidebar a {
+    display: block;
+    padding: 12px;
+    margin-bottom: 5px;
+    border-radius: 7px;
+    color: var(--muted);
+}
+.sidebar a:hover, .sidebar a.active { background: #263244; color: white; }
+.logout {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 9px 13px;
+    border-radius: 6px;
+    background: #263244;
+    color: white;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font: inherit;
+}
+.logout:hover { background: #38465c; }
+
+main { min-width: 0; }
+h1 { font-size: 28px; margin: 0 0 8px; }
+.subtitle { color: var(--muted); margin: 0 0 28px; line-height: 1.5; max-width: 62ch; }
+.see-all { color: var(--accent); font-size: 13px; }
+
+/* One entry per album: a header row, then its reviews underneath. */
+.entry {
+    padding: 26px 0 30px;
+    border-top: 1px solid var(--border);
+}
+.entry-head {
+    display: grid;
+    grid-template-columns: 56px 150px minmax(0, 1fr);
+    gap: 20px;
+    align-items: center;
+}
+.rank {
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: right;
+    color: var(--border);
+    font-variant-numeric: tabular-nums;
+}
+.entry:first-of-type .rank,
+.entry:nth-of-type(2) .rank,
+.entry:nth-of-type(3) .rank { color: var(--purple); }
+
+.cover-link { display: block; }
+.cover, .cover-placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 40px;
+}
+.entry-title { font-size: 24px; margin: 0 0 6px; line-height: 1.25; }
+.entry-title a:hover { color: var(--accent); }
+.entry-artist { color: var(--muted); margin: 0; }
+.entry-year { color: var(--muted); font-size: 13px; margin-left: 10px; }
+.entry-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 18px;
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.score { color: var(--text); font-size: 32px; font-weight: 700; line-height: 1; }
+.score-max { font-size: 14px; font-weight: 400; color: var(--muted); }
+.stars { color: var(--accent); font-size: 17px; letter-spacing: 1px; }
+
+.entry-reviews {
+    margin: 20px 0 0 76px;
+    padding-left: 20px;
+    border-left: 2px solid var(--border);
+}
+.review {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    padding: 13px 0;
+}
+.review + .review { border-top: 1px solid var(--border); }
+.avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #347ca5);
+    display: grid;
+    place-items: center;
+    font-weight: bold;
+}
+.review-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font-size: 12px; color: var(--muted); }
+.review-meta strong { color: var(--text); font-size: 13px; }
+.review-meta .rating { color: var(--accent); }
+.review p { color: #b7c5d9; font-size: 14px; line-height: 1.6; margin: 6px 0 0; overflow-wrap: anywhere; }
+.no-reviews { margin: 0; color: var(--muted); font-size: 13px; }
+
+.state { color: var(--muted); padding: 30px 0; line-height: 1.6; }
+
+@media (max-width: 900px) {
+    .entry-head { grid-template-columns: 44px 110px minmax(0, 1fr); gap: 14px; }
+    .rank { font-size: 32px; }
+    .entry-reviews { margin-left: 58px; }
+}
+@media (max-width: 700px) {
+    header { padding: 12px; gap: 12px; height: auto; flex-wrap: wrap; }
+    .logo { font-size: 22px; }
+    .header-username { display: none; }
+    .settings-link { margin-left: auto; }
+    .layout { display: block; padding: 17px; }
+    .sidebar { display: flex; overflow-x: auto; gap: 5px; margin-bottom: 24px; }
+    .sidebar a { white-space: nowrap; }
+    .logout { margin-top: 0; white-space: nowrap; }
+    h1 { font-size: 24px; }
+    .entry-head { grid-template-columns: 90px minmax(0, 1fr); }
+    .rank { display: none; }
+    .entry-title { font-size: 19px; }
+    .entry-reviews { margin-left: 0; padding-left: 14px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <a class="logo" href="/home"><span>●</span> albumly</a>
+    <div class="header-username">{{username}}</div>
+    <a class="settings-link" href="/Settings_page.html">⚙ Settings</a>
+</header>
+
+<div class="layout">
+    <nav class="sidebar">
+        <a href="/home">⌂ &nbsp; Home</a>
+        <a href="/Search_page.html">⌕ &nbsp; Search Albums</a>
+        <a class="active" href="/discover" aria-current="page">◎ &nbsp; Discover</a>
+        <a href="/profile">▧ &nbsp; Your Reviews</a>
+        <a href="/Settings_page.html">⚙ &nbsp; Settings</a>
+        <button class="logout" id="logoutButton" type="button">Log out</button>
+    </nav>
+
+    <main>
+        <h1>Discover</h1>
+        <p class="subtitle">
+            The albums our members rate highest and talk about most. Albums with
+            more ratings count for more, so a single 5-star review won't top the list.
+        </p>
+
+        <div id="discoverList" aria-live="polite">
+            <p class="state">Loading albums...</p>
+        </div>
+    </main>
+</div>
+
+<script>
+const list = document.getElementById("discoverList");
+
+function starText(rating) {
+    const value = Number(rating) || 0;
+    const full = Math.floor(value);
+    const half = value % 1 >= 0.5 ? 1 : 0;
+    return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(Math.max(0, 5 - full - half));
+}
+
+function formatDate(isoString) {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function plural(count, word) {
+    return count + " " + word + (count === 1 ? "" : "s");
+}
+
+function openAlbum(album) {
+    sessionStorage.setItem("selectedAlbum", JSON.stringify({
+        id: album.id,
+        title: album.title,
+        artist: album.artist,
+        release_year: album.release_year || "",
+        album_cover_url: album.album_cover_url || null
+    }));
+}
+
+function makeAlbumLink(album, child, className) {
+    const link = document.createElement("a");
+    link.href = "/Album_page.html";
+    if (className) link.className = className;
+    link.addEventListener("click", () => openAlbum(album));
+    link.appendChild(child);
+    return link;
+}
+
+function renderReview(review) {
+    const item = document.createElement("div");
+    item.className = "review";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = (review.username || "?").charAt(0).toUpperCase();
+
+    const content = document.createElement("div");
+
+    const meta = document.createElement("div");
+    meta.className = "review-meta";
+    const name = document.createElement("strong");
+    name.textContent = review.username;
+    meta.appendChild(name);
+
+    if (review.rating) {
+        const rating = document.createElement("span");
+        rating.className = "rating";
+        rating.textContent = starText(review.rating);
+        meta.appendChild(rating);
+    }
+    const when = formatDate(review.listened_on || review.created_at);
+    if (when) {
+        const date = document.createElement("span");
+        date.textContent = when;
+        meta.appendChild(date);
+    }
+
+    const text = document.createElement("p");
+    text.textContent = review.body;
+
+    content.append(meta, text);
+    item.append(avatar, content);
+    return item;
+}
+
+function renderAlbum(album, index) {
+    const entry = document.createElement("article");
+    entry.className = "entry";
+
+    const head = document.createElement("div");
+    head.className = "entry-head";
+
+    const rank = document.createElement("div");
+    rank.className = "rank";
+    rank.textContent = String(index + 1);
+    rank.setAttribute("aria-label", "Rank " + (index + 1));
+
+    let cover;
+    if (album.album_cover_url) {
+        cover = document.createElement("img");
+        cover.className = "cover";
+        cover.src = album.album_cover_url;
+        cover.alt = album.title + " album cover";
+        cover.loading = "lazy";
+    } else {
+        cover = document.createElement("div");
+        cover.className = "cover-placeholder";
+        cover.textContent = "♪";
+    }
+    const coverLink = makeAlbumLink(album, cover, "cover-link");
+    coverLink.setAttribute("aria-label", "Open " + album.title);
+
+    const info = document.createElement("div");
+
+    const title = document.createElement("h2");
+    title.className = "entry-title";
+    const titleText = document.createElement("span");
+    titleText.textContent = album.title;
+    title.appendChild(makeAlbumLink(album, titleText));
+
+    const artistLine = document.createElement("p");
+    artistLine.className = "entry-artist";
+    artistLine.textContent = album.artist;
+    if (album.release_year) {
+        const year = document.createElement("span");
+        year.className = "entry-year";
+        year.textContent = album.release_year;
+        artistLine.appendChild(year);
+    }
+
+    const stats = document.createElement("div");
+    stats.className = "entry-stats";
+
+    const score = document.createElement("span");
+    score.className = "score";
+    score.textContent = album.avg_rating.toFixed(1);
+    const scoreMax = document.createElement("span");
+    scoreMax.className = "score-max";
+    scoreMax.textContent = " / 5";
+    score.appendChild(scoreMax);
+
+    const stars = document.createElement("span");
+    stars.className = "stars";
+    stars.textContent = starText(album.avg_rating);
+    stars.setAttribute("aria-hidden", "true");
+
+    const ratings = document.createElement("span");
+    ratings.textContent = plural(album.rating_count, "rating");
+    const likes = document.createElement("span");
+    likes.textContent = plural(album.likes, "like");
+
+    stats.append(score, stars, ratings, likes);
+    info.append(title, artistLine, stats);
+    head.append(rank, coverLink, info);
+    entry.appendChild(head);
+
+    const reviews = document.createElement("div");
+    reviews.className = "entry-reviews";
+    if (album.reviews.length) {
+        album.reviews.forEach(review => reviews.appendChild(renderReview(review)));
+    } else {
+        const none = document.createElement("p");
+        none.className = "no-reviews";
+        none.textContent = "No written reviews yet.";
+        reviews.appendChild(none);
+    }
+    entry.appendChild(reviews);
+
+    return entry;
+}
+
+function showMessage(text, withLink) {
+    list.replaceChildren();
+    const message = document.createElement("p");
+    message.className = "state";
+    message.append(text);
+    if (withLink) {
+        message.append(" ");
+        const link = document.createElement("a");
+        link.href = "/Search_page.html";
+        link.className = "see-all";
+        link.textContent = "Search for an album and write the first review →";
+        message.appendChild(link);
+    }
+    list.appendChild(message);
+}
+
+async function loadDiscover() {
+    try {
+        const response = await fetch("/api/discover", { headers: { "Accept": "application/json" } });
+        if (response.status === 401) {
+            window.location.replace("/login-page");
+            return;
+        }
+        if (!response.ok) throw new Error("Could not load Discover");
+
+        const data = await response.json();
+        const albums = data.albums || [];
+        if (!albums.length) {
+            showMessage("Nothing to discover yet. Albums appear here once members rate them.", true);
+            return;
+        }
+
+        list.replaceChildren();
+        albums.forEach((album, index) => list.appendChild(renderAlbum(album, index)));
+    } catch (error) {
+        showMessage("Could not load albums right now. Please try again in a moment.", false);
+    }
+}
+
+document.getElementById("logoutButton").addEventListener("click", async () => {
+    try {
+        await fetch("/logout", { method: "POST" });
+    } catch (error) {
+        alert("Could not reach the server to log out.");
+        return;
+    }
+    window.location.replace("/login-page");
+});
+
+loadDiscover();
+</script>
+</body>
+</html>
