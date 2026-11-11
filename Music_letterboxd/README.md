@@ -24,7 +24,8 @@ SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
 ```
 Also add the session url for the database to allow for proper storage:
 
-```DATABASE_URL=supabase-postgres-url  
+```env
+DATABASE_URL=supabase-postgres-url  
 ```
 
 The `.env` file is local and ignored by Git. Never commit it or put the Client Secret in HTML or browser JavaScript.
